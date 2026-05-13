@@ -164,6 +164,7 @@ const API = 'https://script.google.com/macros/s/AKfycbx07IkbG4IsgQtQPvNo1mCyWfm7
 let items = {};         // id → item object
 let matchRows = [];     // raw match sheet rows
 let jumperDoNot = {};   // jumperId → Set of topIds
+let bottomYesTops = {}; // bottomId → Set of topIds
 let existingOutfits = new Set(); // sorted piece keys already saved
 let seenCombos = new Set();      // keys seen this session (from progress sheet)
 let queue = [];         // [{bottomId, jumperId, topId, key}]
@@ -246,6 +247,11 @@ async function init() {
         const doNotRaw = row['do not'] || '';
         jumperDoNot[id] = new Set(
           String(doNotRaw).split(',').map(s => s.trim()).filter(Boolean)
+        );
+      } else if (cat === 'bottoms') {
+        const yesTopsRaw = row['yes_tops'] || '';
+        bottomYesTops[id] = new Set(
+          String(yesTopsRaw).split(',').map(s => s.trim()).filter(Boolean)
         );
       }
     });
@@ -484,9 +490,13 @@ async function confirmDislike(reason) {
     savePromises.push(apiCall({ action: 'updateDoNot', data: { jumperId: combo.jumperId, topId: combo.topId } }));
     if (!jumperDoNot[combo.jumperId]) jumperDoNot[combo.jumperId] = new Set();
     jumperDoNot[combo.jumperId].add(combo.topId);
+    rebuildQueueAfterRule();
     showToast('🚫 Rule added — won\'t suggest this pair again');
   } else if (reason === 'bottom_top_clash') {
     savePromises.push(apiCall({ action: 'removeYesTop', data: { bottomId: combo.bottomId, topId: combo.topId } }));
+    // Update in memory so rebuildQueueAfterRule can filter correctly
+    if (bottomYesTops[combo.bottomId]) bottomYesTops[combo.bottomId].delete(combo.topId);
+    rebuildQueueAfterRule();
     showToast('🚫 Rule added — won\'t suggest this pair again');
   } else {
     showToast('Noted, skipping this combo');
@@ -527,6 +537,23 @@ async function handleUndo() {
   }
 
   showToast('↩ Undone');
+}
+
+// ── Rebuild queue after a new rule is added ───────────────────
+function rebuildQueueAfterRule() {
+  const before = queue.length - currentIdx;
+  const remaining = queue.slice(currentIdx).filter(combo => {
+    // Filter do_not clashes
+    const doNotSet = jumperDoNot[combo.jumperId] || new Set();
+    if (doNotSet.has(combo.topId)) return false;
+    // Filter bottom+top clashes
+    const validTops = bottomYesTops[combo.bottomId] || new Set();
+    if (validTops.size > 0 && !validTops.has(combo.topId)) return false;
+    return true;
+  });
+  const removed = before - remaining.length;
+  queue = [...queue.slice(0, currentIdx), ...remaining];
+  if (removed > 0) showToast(`🚫 Rule added — removed ${removed} blocked combo${removed > 1 ? 's' : ''} from queue`);
 }
 
 // ── Helpers ──────────────────────────────────────────────────
