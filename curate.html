@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Outfit Curation</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --cream:#F5F1EA;--warm:#FDFBF7;--ink:#1A1714;--ink-soft:#3D3935;
+  --ink-muted:#6B6560;--ink-faint:#A09A94;--border:#E4DED6;--border-mid:#C8C0B6;
+  --sage:#6B8F78;--sage-light:#EAF0EC;--sage-dark:#3E5C49;
+  --rose:#B85C5C;--rose-light:#FAE8E8;--rose-mid:#e07070;
+  --amber:#C4834A;--amber-light:#FAF0E4;
+  --r:14px;--rsm:9px;--rpill:999px;
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* LOADING */
+#screen-loading{align-items:center;justify-content:center;gap:16px;}
+.load-logo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;text-align:center;}
+.load-logo em{font-style:italic;color:var(--ink-muted);}
+.load-sub{font-size:13px;color:var(--ink-faint);text-align:center;}
+.spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--sage);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* DONE */
+#screen-done{align-items:center;justify-content:center;gap:20px;padding:2rem;}
+.done-icon{font-size:48px;}
+.done-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;text-align:center;}
+.done-sub{font-size:13px;color:var(--ink-muted);text-align:center;line-height:1.7;max-width:280px;}
+.done-stats{display:flex;gap:16px;margin-top:8px;}
+.done-stat{text-align:center;background:var(--warm);border:1px solid var(--border);border-radius:var(--r);padding:14px 20px;}
+.done-stat-num{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;}
+.done-stat-label{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
+.done-restart{padding:12px 28px;border-radius:var(--rpill);background:var(--ink);color:var(--warm);border:none;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;}
+
+/* MAIN CURATION SCREEN */
+#screen-curate{padding:0;}
+
+/* HEADER */
+.cur-header{padding:1rem 1.25rem .75rem;border-bottom:1px solid var(--border);background:var(--warm);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.cur-logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;}
+.cur-logo em{font-style:italic;color:var(--ink-muted);}
+.cur-progress-wrap{flex:1;max-width:160px;}
+.cur-progress-bar{height:3px;background:var(--border);border-radius:3px;overflow:hidden;}
+.cur-progress-fill{height:100%;background:var(--sage);border-radius:3px;transition:width .4s ease;}
+.cur-progress-label{font-size:10px;color:var(--ink-faint);margin-top:4px;text-align:right;}
+.undo-btn{padding:6px 12px;border-radius:var(--rpill);border:1px solid var(--border);background:var(--warm);font-size:12px;color:var(--ink-muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;}
+.undo-btn:hover:not(:disabled){border-color:var(--border-mid);color:var(--ink);}
+.undo-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* CARD AREA */
+.card-area{flex:1;overflow-y:auto;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:1rem;}
+
+/* OUTFIT CARD */
+.outfit-card{background:var(--warm);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:transform .2s,box-shadow .2s;}
+.outfit-card.deciding{transform:scale(1.01);box-shadow:0 8px 32px rgba(26,23,20,.1);}
+
+/* FLAT-LAY */
+.flatlay{display:grid;grid-template-rows:1fr 1fr;width:100%;background:var(--cream);height:260px;}
+.flatlay-cell{overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--cream);border:1px solid var(--border);position:relative;}
+.flatlay-cell img{width:100%;height:100%;object-fit:contain;}
+.flatlay-cell .emoji{font-size:28px;}
+
+/* CARD FOOTER */
+.card-foot{padding:.75rem 1rem;display:flex;flex-direction:column;gap:10px;}
+.card-piece-labels{display:flex;gap:6px;flex-wrap:wrap;}
+.piece-chip{font-size:10px;color:var(--ink-muted);background:var(--cream);border:1px solid var(--border);border-radius:var(--rpill);padding:2px 8px;}
+
+/* ACTION BUTTONS */
+.card-actions{display:flex;gap:8px;}
+.btn-heart{flex:2;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;border-radius:var(--rsm);background:var(--sage);color:#fff;border:none;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s;}
+.btn-heart:hover{opacity:.85;}
+.btn-heart:active{transform:scale(.97);}
+.btn-skip{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;border-radius:var(--rsm);background:var(--warm);color:var(--ink-muted);border:1px solid var(--border);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.btn-skip:hover{border-color:var(--border-mid);color:var(--ink);}
+.btn-dislike{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;border-radius:var(--rsm);background:var(--rose-light);color:var(--rose);border:1px solid var(--rose-light);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s;}
+.btn-dislike:hover{opacity:.8;}
+
+/* REASON PICKER */
+.reason-picker{background:var(--cream);border:1px solid var(--border);border-radius:var(--rsm);padding:.75rem;display:none;flex-direction:column;gap:8px;}
+.reason-picker.open{display:flex;}
+.reason-label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);}
+.reason-btns{display:flex;flex-direction:column;gap:6px;}
+.reason-btn{padding:10px 14px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--warm);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--ink-soft);text-align:left;transition:all .15s;}
+.reason-btn:hover{border-color:var(--rose);color:var(--rose);background:var(--rose-light);}
+.reason-cancel{padding:8px;border:none;background:none;font-size:12px;color:var(--ink-faint);cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;}
+
+/* BOTTOM DIVIDER */
+.bottom-label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);padding:.5rem 1.25rem 0;flex-shrink:0;}
+
+/* SAVING INDICATOR */
+.saving-pill{position:fixed;top:1rem;right:1rem;font-size:11px;color:var(--ink-faint);background:var(--warm);border:1px solid var(--border);border-radius:var(--rpill);padding:4px 10px;z-index:50;opacity:0;transition:opacity .3s;pointer-events:none;}
+.saving-pill.show{opacity:1;}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--warm);padding:10px 20px;border-radius:var(--rpill);font-size:13px;z-index:200;transition:transform .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--ink-faint);font-size:13px;line-height:1.9;}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="screen active" id="screen-loading">
+  <div class="load-logo">outfit <em>curation</em></div>
+  <div class="spinner"></div>
+  <div class="load-sub" id="load-status">Loading your wardrobe...</div>
+</div>
+
+<!-- CURATION -->
+<div class="screen" id="screen-curate">
+  <div class="cur-header">
+    <div class="cur-logo">outfit <em>curation</em></div>
+    <div class="cur-progress-wrap">
+      <div class="cur-progress-bar"><div class="cur-progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="cur-progress-label" id="progress-label">0 / 0</div>
+    </div>
+    <button class="undo-btn" id="undo-btn" onclick="handleUndo()" disabled>↩ Undo</button>
+  </div>
+  <div class="bottom-label" id="bottom-label"></div>
+  <div class="card-area" id="card-area"></div>
+</div>
+
+<!-- DONE -->
+<div class="screen" id="screen-done">
+  <div class="done-icon">✨</div>
+  <div class="done-title">All caught up!</div>
+  <div class="done-sub">You've been through every combo for today. Come back to curate more anytime.</div>
+  <div class="done-stats">
+    <div class="done-stat">
+      <div class="done-stat-num" id="stat-loved">0</div>
+      <div class="done-stat-label">Loved</div>
+    </div>
+    <div class="done-stat">
+      <div class="done-stat-num" id="stat-skipped">0</div>
+      <div class="done-stat-label">Skipped</div>
+    </div>
+    <div class="done-stat">
+      <div class="done-stat-num" id="stat-disliked">0</div>
+      <div class="done-stat-label">Disliked</div>
+    </div>
+  </div>
+  <button class="done-restart" onclick="restartSession()">Start a new session</button>
+</div>
+
+<div class="saving-pill" id="saving-pill">Saving...</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbx07IkbG4IsgQtQPvNo1mCyWfm7cIgM9GBq5zSvrWzBQx3_RXHT2RlqcRBfvvPwpCTk/exec';
+
+// ── State ────────────────────────────────────────────────────
+let items = {};         // id → item object
+let matchRows = [];     // raw match sheet rows
+let jumperDoNot = {};   // jumperId → Set of topIds
+let existingOutfits = new Set(); // sorted piece keys already saved
+let seenCombos = new Set();      // keys seen this session (from progress sheet)
+let queue = [];         // [{bottomId, jumperId, topId, key}]
+let currentIdx = 0;
+let stats = { loved: 0, skipped: 0, disliked: 0 };
+let savingTimer = null;
+let lastDecision = null; // { combo, decision, reason, outfitId }
+
+// ── API ──────────────────────────────────────────────────────
+async function apiCall(params) {
+  const qs = Object.entries(params)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(typeof v === 'object' ? JSON.stringify(v) : v)}`)
+    .join('&');
+  const r = await fetch(`${API}?${qs}`);
+  return r.json();
+}
+
+function setStatus(msg) {
+  document.getElementById('load-status').textContent = msg;
+}
+
+function showSaving() {
+  const el = document.getElementById('saving-pill');
+  el.classList.add('show');
+  clearTimeout(savingTimer);
+  savingTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function toDirectUrl(url) {
+  if (!url || !url.trim()) return null;
+  url = url.trim();
+  if (url.includes('drive.google.com')) {
+    const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (m) return `https://lh3.googleusercontent.com/d/${m[1]}`;
+    return null;
+  }
+  if (url.includes('lh3.googleusercontent.com')) return url;
+  if (url.includes('dropbox.com') || url.includes('dropboxusercontent.com')) {
+    url = url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    url = url.replace(/[?&]st=[^&]*/g, '').replace(/[?&]dl=\d/g, '');
+    return url;
+  }
+  return url;
+}
+
+// ── Init ─────────────────────────────────────────────────────
+async function init() {
+  try {
+    setStatus('Loading wardrobe items...');
+    const [itemsRaw, matchRaw, outfitsRaw, progressRaw] = await Promise.all([
+      apiCall({ action: 'getItems' }),
+      apiCall({ action: 'getMatchData' }),
+      apiCall({ action: 'getOutfits' }),
+      apiCall({ action: 'getCurationProgress' }),
+    ]);
+
+    // Index items by id
+    (Array.isArray(itemsRaw) ? itemsRaw : []).forEach(item => {
+      let img = item.img || '';
+      if (img.includes('&st=')) img = img.replace(/&st=[^&]*/, '');
+      items[item.id] = { ...item, img };
+    });
+
+    setStatus('Building compatibility rules...');
+
+    // Parse match data
+    matchRows = Array.isArray(matchRaw) ? matchRaw : [];
+    matchRows.forEach(row => {
+      const id = String(row.id || '').trim();
+      const cat = String(row.cat || '').trim();
+      if (cat === 'jumpers') {
+        const doNotRaw = row['do not'] || '';
+        jumperDoNot[id] = new Set(
+          String(doNotRaw).split(',').map(s => s.trim()).filter(Boolean)
+        );
+      }
+    });
+
+    // Index existing outfits
+    (Array.isArray(outfitsRaw) ? outfitsRaw : []).forEach(o => {
+      let pieces;
+      try { pieces = JSON.parse(o.pieces || '[]'); } catch { pieces = []; }
+      if (Array.isArray(pieces) && pieces.length) {
+        existingOutfits.add(pieces.slice().sort().join('|'));
+      }
+    });
+
+    // Index already-seen combos from progress sheet
+    (Array.isArray(progressRaw) ? progressRaw : []).forEach(row => {
+      if (row.key) seenCombos.add(String(row.key).trim());
+    });
+    // Also count stats from progress
+    (Array.isArray(progressRaw) ? progressRaw : []).forEach(row => {
+      if (row.decision === 'heart') stats.loved++;
+      else if (row.decision === 'skip') stats.skipped++;
+      else if (row.decision === 'dislike') stats.disliked++;
+    });
+
+    setStatus('Generating outfit queue...');
+    buildQueue();
+
+    if (!queue.length) {
+      showDone();
+      return;
+    }
+
+    showScreen('screen-curate');
+    renderCard();
+
+  } catch (e) {
+    setStatus('Error loading data. Please refresh and try again.');
+    console.error(e);
+  }
+}
+
+// ── Build Queue ──────────────────────────────────────────────
+function buildQueue() {
+  const bottomRows = matchRows.filter(r => String(r.cat).trim() === 'bottoms');
+
+  // Shuffle bottoms for variety
+  const shuffled = bottomRows.slice().sort(() => Math.random() - .5);
+
+  shuffled.forEach(row => {
+    const bottomId = String(row.id || '').trim();
+    const yesJumpers = parseList(row.yes_jumpers);
+    const yesTops = parseList(row.yes_tops);
+
+    yesJumpers.forEach(jumperId => {
+      const doNotSet = jumperDoNot[jumperId] || new Set();
+      yesTops.forEach(topId => {
+        if (doNotSet.has(topId)) return; // incompatible pair
+        const key = [bottomId, jumperId, topId].sort().join('|');
+        if (existingOutfits.has(key)) return; // already an outfit
+        if (seenCombos.has(key)) return;       // already decided
+        queue.push({ bottomId, jumperId, topId, key });
+      });
+    });
+  });
+
+  // Shuffle within each bottom's combos for natural flow
+  queue = queue.sort(() => Math.random() - .5);
+}
+
+function parseList(val) {
+  if (!val) return [];
+  return String(val).split(',').map(s => s.trim()).filter(Boolean);
+}
+
+// ── Render ───────────────────────────────────────────────────
+function renderCard() {
+  const total = queue.length + seenCombos.size;
+  const done = seenCombos.size;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent =
+    `${done.toLocaleString()} / ${(queue.length + done).toLocaleString()}`;
+
+  if (currentIdx >= queue.length) {
+    showDone();
+    return;
+  }
+
+  const combo = queue[currentIdx];
+  const bottom = items[combo.bottomId];
+  const jumper = items[combo.jumperId];
+  const top = items[combo.topId];
+
+  if (bottom) {
+    document.getElementById('bottom-label').textContent =
+      `Bottom: ${bottom.name || combo.bottomId}`;
+  }
+
+  const area = document.getElementById('card-area');
+  area.innerHTML = '';
+
+  const card = document.createElement('div');
+  card.className = 'outfit-card deciding';
+
+  // Flat-lay: [jumper | top] top row, [bottom spanning] bottom
+  // Layout: col1=jumper(top half), col1=bottom(bottom half), col2=top(full span)
+  // Actually: bottom spans left col rows 1+2, jumper top-right, top bottom-right
+  // Per app convention: jumper col + top/bottom col
+  const flatlayHtml = buildFlatlay(bottom, jumper, top);
+
+  const chipHtml = [
+    jumper ? `<span class="piece-chip">🧶 ${jumper.name || 'Jumper'}</span>` : '',
+    top ? `<span class="piece-chip">👕 ${top.name || 'Top'}</span>` : '',
+    bottom ? `<span class="piece-chip">👖 ${bottom.name || 'Bottom'}</span>` : '',
+  ].join('');
+
+  card.innerHTML = `
+    ${flatlayHtml}
+    <div class="card-foot">
+      <div class="card-piece-labels">${chipHtml}</div>
+      <div class="card-actions">
+        <button class="btn-dislike" onclick="handleDislike()">✕ Dislike</button>
+        <button class="btn-skip" onclick="handleSkip()">— Skip</button>
+        <button class="btn-heart" onclick="handleHeart()">♥ Love it</button>
+      </div>
+      <div class="reason-picker" id="reason-picker">
+        <div class="reason-label">What's wrong with it?</div>
+        <div class="reason-btns">
+          <button class="reason-btn" onclick="confirmDislike('top_jumper_clash')">👕🧶 This top and jumper don't work together</button>
+          <button class="reason-btn" onclick="confirmDislike('bottom_top_clash')">👖👕 This bottom and top don't work together</button>
+          <button class="reason-btn" onclick="confirmDislike('bottom_jumper_clash')">👖🧶 This bottom and jumper don't work together</button>
+          <button class="reason-btn" onclick="confirmDislike('just_no')">🚫 Just don't love this combo</button>
+        </div>
+        <button class="reason-cancel" onclick="closeReasonPicker()">Cancel</button>
+      </div>
+    </div>`;
+
+  area.appendChild(card);
+  area.scrollTop = 0;
+}
+
+function buildFlatlay(bottom, jumper, top) {
+  // 3-col layout: jumper (spans both rows) | top (row 1) | bottom (row 2)
+  // Actually mirror the app's layout: jumper col + top/bottom col
+  const numCols = 2;
+  const cells = [];
+
+  // Col 1: jumper spanning both rows
+  cells.push(`<div class="flatlay-cell" style="grid-column:1;grid-row:1/3;">${cellInner(jumper)}</div>`);
+  // Col 2 row 1: top
+  cells.push(`<div class="flatlay-cell" style="grid-column:2;grid-row:1;">${cellInner(top)}</div>`);
+  // Col 2 row 2: bottom
+  cells.push(`<div class="flatlay-cell" style="grid-column:2;grid-row:2;">${cellInner(bottom)}</div>`);
+
+  return `<div class="flatlay" style="grid-template-columns:repeat(${numCols},1fr);">${cells.join('')}</div>`;
+}
+
+function cellInner(item) {
+  if (!item) return '';
+  const url = toDirectUrl(item.img);
+  if (url) return `<img src="${url}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+    <span class="emoji" style="display:none;">${item.emoji || '👕'}</span>`;
+  return `<span class="emoji">${item.emoji || '👕'}</span>`;
+}
+
+// ── Actions ──────────────────────────────────────────────────
+async function handleHeart() {
+  const combo = queue[currentIdx];
+  stats.loved++;
+  seenCombos.add(combo.key);
+
+  const now = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const maxNum = await getMaxOutfitNum();
+  const outfitId = 'o' + Date.now();
+  const outfitData = {
+    id: outfitId,
+    num: maxNum + 1,
+    pieces: JSON.stringify([combo.bottomId, combo.jumperId, combo.topId]),
+    accessories: '[]',
+    accByCat: '{}',
+    seasons: '[]',
+    conditions: '[]',
+    lastWorn: now,
+  };
+
+  lastDecision = { combo, decision: 'heart', reason: '', outfitId };
+  document.getElementById('undo-btn').disabled = false;
+
+  showSaving();
+  existingOutfits.add(combo.key);
+  currentIdx++;
+  renderCard();
+
+  await Promise.all([
+    apiCall({ action: 'saveOutfit', data: outfitData }),
+    apiCall({ action: 'saveCurationDecision', data: { key: combo.key, bottomId: combo.bottomId, jumperId: combo.jumperId, topId: combo.topId, decision: 'heart', reason: '' } }),
+  ]);
+  showToast('♥ Outfit saved!');
+}
+
+async function handleSkip() {
+  const combo = queue[currentIdx];
+  stats.skipped++;
+  seenCombos.add(combo.key);
+  lastDecision = { combo, decision: 'skip', reason: '', outfitId: null };
+  document.getElementById('undo-btn').disabled = false;
+  currentIdx++;
+  renderCard();
+  showSaving();
+  await apiCall({ action: 'saveCurationDecision', data: { key: combo.key, bottomId: combo.bottomId, jumperId: combo.jumperId, topId: combo.topId, decision: 'skip', reason: '' } });
+}
+
+function handleDislike() {
+  document.getElementById('reason-picker').classList.add('open');
+  document.querySelector('.card-actions').style.display = 'none';
+}
+
+function closeReasonPicker() {
+  document.getElementById('reason-picker').classList.remove('open');
+  document.querySelector('.card-actions').style.display = 'flex';
+}
+
+async function confirmDislike(reason) {
+  const combo = queue[currentIdx];
+  stats.disliked++;
+  seenCombos.add(combo.key);
+  lastDecision = { combo, decision: 'dislike', reason, outfitId: null };
+  document.getElementById('undo-btn').disabled = false;
+  currentIdx++;
+
+  const savePromises = [
+    apiCall({ action: 'saveCurationDecision', data: { key: combo.key, bottomId: combo.bottomId, jumperId: combo.jumperId, topId: combo.topId, decision: 'dislike', reason } }),
+  ];
+
+  if (reason === 'top_jumper_clash') {
+    savePromises.push(apiCall({ action: 'updateDoNot', data: { jumperId: combo.jumperId, topId: combo.topId } }));
+    if (!jumperDoNot[combo.jumperId]) jumperDoNot[combo.jumperId] = new Set();
+    jumperDoNot[combo.jumperId].add(combo.topId);
+    showToast('🚫 Rule added — won\'t suggest this pair again');
+  } else if (reason === 'bottom_top_clash') {
+    savePromises.push(apiCall({ action: 'removeYesTop', data: { bottomId: combo.bottomId, topId: combo.topId } }));
+    showToast('🚫 Rule added — won\'t suggest this pair again');
+  } else {
+    showToast('Noted, skipping this combo');
+  }
+
+  showSaving();
+  renderCard();
+  await Promise.all(savePromises);
+}
+
+async function handleUndo() {
+  if (!lastDecision) return;
+  const { combo, decision, outfitId } = lastDecision;
+
+  // Reverse in-memory state
+  currentIdx--;
+  seenCombos.delete(combo.key);
+  if (decision === 'heart') {
+    stats.loved--;
+    existingOutfits.delete(combo.key);
+  } else if (decision === 'skip') {
+    stats.skipped--;
+  } else if (decision === 'dislike') {
+    stats.disliked--;
+  }
+
+  lastDecision = null;
+  document.getElementById('undo-btn').disabled = true;
+  renderCard();
+  showSaving();
+
+  // Remove from progress sheet
+  await apiCall({ action: 'saveCurationDecision', data: { key: combo.key, bottomId: combo.bottomId, jumperId: combo.jumperId, topId: combo.topId, decision: 'undo', reason: '' } });
+
+  // If it was a heart, delete the outfit from the sheet
+  if (decision === 'heart' && outfitId) {
+    await apiCall({ action: 'deleteOutfit', id: outfitId });
+  }
+
+  showToast('↩ Undone');
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+let _maxNumCache = null;
+async function getMaxOutfitNum() {
+  if (_maxNumCache !== null) return ++_maxNumCache;
+  const outfits = await apiCall({ action: 'getOutfits' });
+  _maxNumCache = Array.isArray(outfits)
+    ? Math.max(0, ...outfits.map(o => Number(o.num) || 0))
+    : 0;
+  return _maxNumCache;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showDone() {
+  document.getElementById('stat-loved').textContent = stats.loved.toLocaleString();
+  document.getElementById('stat-skipped').textContent = stats.skipped.toLocaleString();
+  document.getElementById('stat-disliked').textContent = stats.disliked.toLocaleString();
+  showScreen('screen-done');
+}
+
+function restartSession() {
+  // Clear only the in-memory queue so it reloads fresh from sheet
+  // (already-seen combos remain in the progress sheet so truly seen ones stay skipped)
+  location.reload();
+}
+
+init();
+</script>
+</body>
+</html>
