@@ -168,6 +168,7 @@ let existingOutfits = new Set(); // sorted piece keys already saved
 let seenCombos = new Set();      // keys seen this session (from progress sheet)
 let queue = [];         // [{bottomId, jumperId, topId, key}]
 let currentIdx = 0;
+let totalAtStart = 0;  // locked at startup, never changes
 let stats = { loved: 0, skipped: 0, disliked: 0 };
 let savingTimer = null;
 let lastDecision = null; // { combo, decision, reason, outfitId }
@@ -271,6 +272,7 @@ async function init() {
 
     setStatus('Generating outfit queue...');
     buildQueue();
+    totalAtStart = queue.length + seenCombos.size;
 
     if (!queue.length) {
       showDone();
@@ -321,12 +323,11 @@ function parseList(val) {
 
 // ── Render ───────────────────────────────────────────────────
 function renderCard() {
-  const total = queue.length + seenCombos.size;
   const done = seenCombos.size;
-  const pct = total ? Math.round((done / total) * 100) : 0;
+  const pct = totalAtStart ? Math.round((done / totalAtStart) * 100) : 0;
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('progress-label').textContent =
-    `${done.toLocaleString()} / ${(queue.length + done).toLocaleString()}`;
+    `${done.toLocaleString()} / ${totalAtStart.toLocaleString()}`;
 
   if (currentIdx >= queue.length) {
     showDone();
