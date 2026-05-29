@@ -477,16 +477,40 @@ function exportBackup() {
 function importBackup(e) {
   const f = e.target.files[0]; if (!f) return;
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = async ev => {
     try {
       const d = JSON.parse(ev.target.result), imp = d.recipes || d;
       if (!Array.isArray(imp)) throw new Error('Invalid');
-      recipes = [...imp, ...recipes.filter(r => !imp.find(i => i.id === r.id))];
+      // Merge into local state (skip duplicates by id)
+      const newRecipes = imp.filter(r => !recipes.find(x => x.id === r.id));
+      recipes = [...newRecipes, ...recipes];
       render();
-      startReview(imp);
+      startReview(newRecipes);
+      // Save each new recipe to the Sheet in the background
+      saveImportedToSheet(newRecipes);
     } catch { showToast('Could not read that file.', false); }
   };
   reader.readAsText(f); e.target.value = '';
+}
+
+async function saveImportedToSheet(newRecipes) {
+  setStatus(`Saving ${newRecipes.length} recipe${newRecipes.length !== 1 ? 's' : ''} to your Sheet...`, false);
+  let saved = 0, failed = 0;
+  for (const recipe of newRecipes) {
+    try {
+      await apiCall({ action: 'saveRecipe', data: recipe });
+      saved++;
+      setStatus(`Saving to Sheet... ${saved} of ${newRecipes.length} done`, false);
+    } catch (e) {
+      failed++;
+    }
+  }
+  if (failed === 0) {
+    clearStatus();
+    showToast(`${saved} recipe${saved !== 1 ? 's' : ''} saved to your Sheet!`, false);
+  } else {
+    setStatus(`${saved} saved, ${failed} failed. Try re-importing or check your connection.`, true);
+  }
 }
 
 // ─── Post-import review ───────────────────────────────────────────────────────
