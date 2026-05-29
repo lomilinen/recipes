@@ -439,20 +439,13 @@ async function loadRecipes() {
   setStatus('Loading recipes...', false);
   try {
     const data = await apiCall({ action: 'getRecipes' });
-    if (data.recipes && data.recipes.length > 0) {
-      recipes = data.recipes;
-      clearStatus();
-      render();
-      checkBackup();
-    } else {
-      // Got a response but no recipes — show what came back
-      clearStatus();
-      setStatus(`Connected but got no recipes. Response: ${JSON.stringify(data).slice(0, 120)}`, true);
-      render();
-    }
+    recipes = data.recipes || [];
+    clearStatus();
+    render();
+    checkBackup();
   } catch (e) {
     clearStatus();
-    setStatus(`Could not connect: ${e.message || e}`, true);
+    setStatus('Could not load. Check your Apps Script URL in the config.', true);
     render();
   }
 }
