@@ -481,12 +481,15 @@ function importBackup(e) {
     try {
       const d = JSON.parse(ev.target.result), imp = d.recipes || d;
       if (!Array.isArray(imp)) throw new Error('Invalid');
-      // Merge into local state (skip duplicates by id)
-      const newRecipes = imp.filter(r => !recipes.find(x => x.id === r.id));
+      const existingNames = new Set(recipes.map(r => r.name.trim().toLowerCase()));
+      // Assign fresh IDs and skip true duplicates (same name)
+      const newRecipes = imp
+        .filter(r => !existingNames.has(r.name.trim().toLowerCase()))
+        .map((r, i) => ({ ...r, id: (Date.now() + i * 1000).toString() }));
+      if (!newRecipes.length) { showToast('All recipes in that file already exist.', false); return; }
       recipes = [...newRecipes, ...recipes];
       render();
       startReview(newRecipes);
-      // Save each new recipe to the Sheet in the background
       saveImportedToSheet(newRecipes);
     } catch { showToast('Could not read that file.', false); }
   };
