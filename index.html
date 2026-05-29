@@ -12,6 +12,7 @@
     --near-black: #2B2123; --burgundy: #692B36; --mauve-light: #e8e0e5;
     --gold-light: #ede0b8; --sage: #637562; --sage-light: #d4ddd4;
     --forest: #374030; --cream: #f5f0eb; --warm-white: #faf7f3; --border: #ddd5d0;
+    --rose: #c9738c; --rose-light: #f2e0e6;
     --font-display: 'Playfair Display', Georgia, serif; --font-body: 'DM Sans', sans-serif;
   }
   body { background: var(--cream); font-family: var(--font-body); color: var(--near-black); min-height: 100vh; -webkit-font-smoothing: antialiased; }
@@ -35,9 +36,16 @@
   .filter-btn.forest { color: var(--forest); }
   .filter-btn.forest:hover { border-color: var(--forest); }
   .filter-btn.forest.active { background: var(--forest); border-color: var(--forest); color: #fff; }
+  .filter-btn.rose { color: var(--rose); }
+  .filter-btn.rose:hover { border-color: var(--rose); }
+  .filter-btn.rose.active { background: var(--rose); border-color: var(--rose); color: #fff; }
   .add-btn { font-family: var(--font-body); font-size: 0.85rem; padding: 0.5rem 1.25rem; background: var(--burgundy); color: #fff; border: none; border-radius: 20px; cursor: pointer; font-weight: 500; transition: background 0.15s; white-space: nowrap; }
   .add-btn:hover { background: var(--near-black); }
   .divider { width: 1px; background: var(--border); align-self: stretch; margin: 0 0.15rem; }
+
+  .occasion-row { display: none; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+  .occasion-row.show { display: flex; }
+  .occasion-label { font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--rose); white-space: nowrap; }
 
   .bottom-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem; }
   .toolbar { display: flex; gap: 0.5rem; align-items: center; }
@@ -60,6 +68,7 @@
   .tag { font-size: 0.68rem; padding: 0.18rem 0.55rem; border-radius: 20px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
   .tag-season { background: var(--sage-light); color: var(--forest); }
   .tag-cat { background: var(--gold-light); color: #6b5210; }
+  .tag-occasion { background: var(--rose-light); color: var(--rose); }
   .card-name { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; line-height: 1.3; color: var(--near-black); }
   .card-source { font-size: 0.72rem; color: var(--burgundy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .card-actions { display: flex; gap: 0.4rem; margin-top: auto; padding-top: 0.5rem; align-items: center; }
@@ -97,13 +106,29 @@
   .src-btn { font-family: var(--font-body); font-size: 0.8rem; padding: 0.32rem 0.85rem; border: 1px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--warm-white); color: var(--burgundy); transition: all 0.15s; }
   .src-btn.active { background: var(--near-black); border-color: var(--near-black); color: #fff; }
 
+  /* Occasion combobox */
+  .occasion-input-wrap { position: relative; }
+  .occasion-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--warm-white); border: 1px solid var(--border); border-radius: 8px; z-index: 50; max-height: 180px; overflow-y: auto; box-shadow: 0 4px 16px rgba(43,33,35,0.1); }
+  .occasion-dropdown.open { display: block; }
+  .occasion-opt { padding: 0.5rem 0.8rem; font-size: 0.88rem; cursor: pointer; transition: background 0.12s; }
+  .occasion-opt:hover { background: var(--mauve-light); }
+  .occasion-opt.new-opt { color: var(--rose); font-style: italic; }
+
+  /* View modal nav */
+  .view-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .view-nav-arrows { display: flex; align-items: center; gap: 0.5rem; }
+  .view-nav-btn { font-family: var(--font-body); font-size: 1rem; padding: 0.3rem 0.75rem; border: 1px solid var(--border); background: var(--warm-white); color: var(--burgundy); border-radius: 20px; cursor: pointer; transition: all 0.15s; line-height: 1; }
+  .view-nav-btn:hover:not(:disabled) { border-color: var(--burgundy); background: var(--mauve-light); }
+  .view-nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .view-nav-count { font-size: 0.75rem; color: #999; white-space: nowrap; }
+  .view-edit-btn { font-family: var(--font-body); font-size: 0.82rem; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--burgundy); background: transparent; color: var(--burgundy); font-weight: 500; transition: all 0.15s; display: inline-block; }
+  .view-edit-btn:hover { background: var(--mauve-light); }
+
   .view-title { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; margin-bottom: 0.75rem; line-height: 1.2; }
   .view-tags { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
   .view-source { font-size: 0.8rem; color: var(--burgundy); margin-bottom: 1rem; }
   .view-source a { color: var(--sage); text-decoration: none; }
   .view-source a:hover { text-decoration: underline; }
-  .view-edit-btn { font-family: var(--font-body); font-size: 0.82rem; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--burgundy); background: transparent; color: var(--burgundy); font-weight: 500; margin-bottom: 1.25rem; transition: all 0.15s; display: inline-block; }
-  .view-edit-btn:hover { background: var(--mauve-light); }
   .view-section { margin-bottom: 1.25rem; }
   .view-section h3 { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--burgundy); margin-bottom: 0.5rem; }
   .view-section ul { list-style: none; padding: 0; font-size: 0.9rem; line-height: 1.75; }
@@ -122,6 +147,43 @@
   .toast.show { opacity: 1; pointer-events: auto; }
   .toast-undo { background: none; border: 1px solid rgba(255,255,255,0.4); color: #fff; font-family: var(--font-body); font-size: 0.78rem; padding: 0.2rem 0.65rem; border-radius: 20px; cursor: pointer; font-weight: 500; }
 
+  .api-key-bar { background: var(--gold-light); border: 1px solid #d4b060; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; display: none; }
+  .api-key-bar.show { display: block; }
+  .api-key-bar p { font-size: 0.82rem; color: #6b5210; margin-bottom: 0.6rem; line-height: 1.5; }
+  .api-key-bar p a { color: #6b5210; font-weight: 500; }
+  .api-key-row { display: flex; gap: 0.5rem; }
+  .api-key-input { flex: 1; font-family: var(--font-body); font-size: 0.85rem; padding: 0.5rem 0.8rem; border: 1px solid #d4b060; border-radius: 8px; background: #fff; color: var(--near-black); min-width: 0; }
+  .api-key-input:focus { outline: none; border-color: #a07820; }
+  .api-key-save { font-family: var(--font-body); font-size: 0.82rem; padding: 0.5rem 1rem; background: #6b5210; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; white-space: nowrap; }
+  .api-key-save:hover { background: var(--near-black); }
+
+
+  .import-section { background: var(--cream); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; }
+  .import-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+  .import-label { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--burgundy); }
+  .import-modes { display: flex; gap: 0.4rem; }
+  .import-mode-btn { font-family: var(--font-body); font-size: 0.8rem; padding: 0.3rem 0.8rem; border: 1px solid var(--border); border-radius: 20px; cursor: pointer; background: var(--warm-white); color: var(--near-black); transition: all 0.15s; font-weight: 400; }
+  .import-mode-btn.active { background: var(--near-black); border-color: var(--near-black); color: #fff; }
+  .import-mode-btn:hover:not(.active) { border-color: var(--near-black); }
+  .import-body { display: none; }
+  .import-body.open { display: block; }
+  .import-row { display: flex; gap: 0.5rem; align-items: stretch; }
+  .import-url-input { flex: 1; font-family: var(--font-body); font-size: 0.88rem; padding: 0.55rem 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: var(--warm-white); color: var(--near-black); transition: border-color 0.15s; min-width: 0; }
+  .import-url-input:focus { outline: none; border-color: var(--burgundy); }
+  .import-go-btn { font-family: var(--font-body); font-size: 0.82rem; padding: 0.55rem 1rem; background: var(--burgundy); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; white-space: nowrap; transition: background 0.15s; flex-shrink: 0; }
+  .import-go-btn:hover:not(:disabled) { background: var(--near-black); }
+  .import-go-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .import-photo-label { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.9rem; border: 1.5px dashed var(--border); border-radius: 8px; cursor: pointer; font-size: 0.85rem; color: var(--burgundy); transition: all 0.15s; background: var(--warm-white); }
+  .import-photo-label:hover { border-color: var(--burgundy); background: var(--mauve-light); }
+  .import-photo-input { display: none; }
+  .import-status { margin-top: 0.65rem; font-size: 0.82rem; display: none; align-items: center; gap: 0.5rem; }
+  .import-status.show { display: flex; }
+  .import-status.error { color: var(--burgundy); }
+  .import-status.success { color: var(--forest); }
+  .import-status.loading { color: #888; }
+  .import-key-note { font-size: 0.78rem; color: #999; margin-top: 0.5rem; line-height: 1.5; }
+  .import-key-note a { color: var(--burgundy); }
+
   @media (max-width: 600px) {
     header h1 { font-size: 2rem; }
     .app { padding: 1.25rem 1rem 3rem; }
@@ -138,6 +200,14 @@
   <div class="banner" id="backup-banner">
     <span id="backup-msg"></span>
     <button onclick="exportBackup()">Export now</button>
+  </div>
+
+  <div class="api-key-bar" id="api-key-bar">
+    <p>To use the <strong>link and photo import</strong> features, paste your Anthropic API key below. You only need to do this once. Get yours at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> (costs fractions of a cent per recipe).</p>
+    <div class="api-key-row">
+      <input class="api-key-input" type="password" id="api-key-input" placeholder="sk-ant-..." onkeydown="if(event.key==='Enter')saveApiKey()">
+      <button class="api-key-save" onclick="saveApiKey()">Save key</button>
+    </div>
   </div>
 
   <header>
@@ -177,6 +247,12 @@
     </div>
   </div>
 
+  <!-- Occasion filter row — shown dynamically when occasions exist -->
+  <div class="occasion-row" id="occasion-filter-row">
+    <span class="occasion-label">Occasion</span>
+    <div class="filter-group" id="occasion-filter-group"></div>
+  </div>
+
   <div class="status-bar" id="status-bar">
     <div class="spinner" id="status-spinner"></div>
     <span id="status-msg"></span>
@@ -194,6 +270,34 @@
   <div class="modal">
     <button class="close-btn" onclick="closeAdd()">&#x2715;</button>
     <h2 id="modal-title">Add a <em>recipe</em></h2>
+
+    <!-- IMPORT SECTION -->
+    <div class="import-section" id="import-section">
+      <div class="import-header">
+        <span class="import-label">Quick import</span>
+        <div class="import-modes">
+          <button class="import-mode-btn" id="imp-link-btn" onclick="setImportMode('link')">&#128279; Link</button>
+          <button class="import-mode-btn" id="imp-photo-btn" onclick="setImportMode('photo')">&#128247; Photo</button>
+        </div>
+      </div>
+      <div class="import-body" id="imp-link-body">
+        <div class="import-row">
+          <input class="import-url-input" type="text" id="imp-url" placeholder="Paste a recipe URL..." onkeydown="if(event.key==='Enter')extractFromLink()">
+          <button class="import-go-btn" id="imp-go-btn" onclick="extractFromLink()">Extract</button>
+        </div>
+      </div>
+      <div class="import-body" id="imp-photo-body">
+        <label class="import-photo-label" for="imp-photo-input">
+          <span>&#128247;</span> Click to upload a photo or screenshot
+        </label>
+        <input type="file" id="imp-photo-input" class="import-photo-input" accept="image/*" onchange="extractFromPhoto(event)">
+      </div>
+      <div class="import-status" id="imp-status">
+        <div class="spinner" id="imp-spinner" style="display:none"></div>
+        <span id="imp-status-msg"></span>
+      </div>
+    </div>
+
     <div class="form-group">
       <label>Recipe name</label>
       <input type="text" id="f-name" placeholder="e.g. Lemon Ricotta Pancakes">
@@ -225,6 +329,14 @@
       </div>
     </div>
     <div class="form-group">
+      <label>Occasion <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <div class="occasion-input-wrap">
+        <input type="text" id="f-occasion" placeholder="e.g. Easter, Thanksgiving, Girls Dinner..." autocomplete="off"
+          oninput="filterOccasionDropdown()" onfocus="openOccasionDropdown()" onblur="scheduleCloseOccasionDropdown()">
+        <div class="occasion-dropdown" id="occasion-dropdown"></div>
+      </div>
+    </div>
+    <div class="form-group">
       <label>Source <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
       <div class="source-type-row" id="src-type-row">
         <button class="src-btn active" data-src="url" onclick="setSrcType('url',this)">Link</button>
@@ -240,12 +352,19 @@
 
 <!-- VIEW MODAL -->
 <div class="overlay" id="view-modal" onclick="if(event.target===this)closeView()">
-  <div class="modal">
+  <div class="modal" id="view-modal-inner">
     <button class="close-btn" onclick="closeView()">&#x2715;</button>
+    <div class="view-nav">
+      <div class="view-nav-arrows">
+        <button class="view-nav-btn" id="view-prev" onclick="navigateView(-1)">&#8592;</button>
+        <span class="view-nav-count" id="view-nav-count"></span>
+        <button class="view-nav-btn" id="view-next" onclick="navigateView(1)">&#8594;</button>
+      </div>
+      <button class="view-edit-btn" onclick="editFromView()">Edit recipe</button>
+    </div>
     <div class="view-title" id="v-name"></div>
     <div class="view-tags" id="v-tags"></div>
     <div class="view-source" id="v-source"></div>
-    <button class="view-edit-btn" onclick="editFromView()">Edit recipe</button>
     <div class="view-section" id="v-ing-section">
       <h3>Ingredients</h3>
       <ul id="v-ingredients"></ul>
@@ -269,7 +388,6 @@
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast">
   <span id="toast-msg"></span>
   <button class="toast-undo" id="toast-undo" onclick="undoDelete()" style="display:none">Undo</button>
@@ -280,9 +398,154 @@
 const API = 'https://script.google.com/macros/s/AKfycbwi6_T2dAd-exKSxYdd4JV06GBvbSfZpeAB8GIh9EoHNOnahTnNn_ReWSPN5uLgFNhi/exec';
 // ─────────────────────────────────────────────────────────────────────────────
 
-let recipes = [], filterSeason = 'all', filterCat = 'all', searchQuery = '';
+function getAnthropicKey() { return localStorage.getItem('recipes-anthropic-key') || ''; }
+
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val) return;
+  localStorage.setItem('recipes-anthropic-key', val);
+  document.getElementById('api-key-bar').classList.remove('show');
+  showToast('API key saved!', false);
+}
+
+function checkApiKey() {
+  const key = getAnthropicKey();
+  document.getElementById('api-key-bar').classList.toggle('show', !key);
+}
+
+const EXTRACT_PROMPT = `Extract the recipe from the content provided and return ONLY a valid JSON object with these exact fields — no markdown, no preamble, just the JSON:
+{
+  "name": "recipe name",
+  "ingredients": "one ingredient per line, plain text",
+  "instructions": "full instructions, plain text",
+  "season": "one of: Spring, Summer, Fall, Winter, All Year — guess from ingredients and vibe",
+  "category": "one of: Breakfast, Lunch, Dinner, Snack, Dessert, Drinks, M+R",
+  "occasion": "only fill this if the recipe clearly screams a specific occasion like Easter, Thanksgiving, Christmas, Halloween — otherwise leave empty string",
+  "source": "the original URL or source name",
+  "sourceType": "url if extracted from a link, other otherwise"
+}`;
+
+// ─── Import mode UI ───────────────────────────────────────────────────────────
+let importMode = null;
+
+function setImportMode(mode) {
+  importMode = importMode === mode ? null : mode;
+  document.getElementById('imp-link-btn').classList.toggle('active', importMode === 'link');
+  document.getElementById('imp-photo-btn').classList.toggle('active', importMode === 'photo');
+  document.getElementById('imp-link-body').classList.toggle('open', importMode === 'link');
+  document.getElementById('imp-photo-body').classList.toggle('open', importMode === 'photo');
+  setImportStatus('', '');
+  if (importMode === 'link') setTimeout(() => document.getElementById('imp-url').focus(), 50);
+}
+
+function setImportStatus(type, msg) {
+  const el = document.getElementById('imp-status');
+  const sp = document.getElementById('imp-spinner');
+  const msgEl = document.getElementById('imp-status-msg');
+  if (!type) { el.className = 'import-status'; return; }
+  el.className = `import-status show ${type}`;
+  sp.style.display = type === 'loading' ? 'block' : 'none';
+  msgEl.textContent = msg;
+}
+
+// ─── Extraction via Anthropic API ─────────────────────────────────────────────
+async function callClaude(messages) {
+  const key = getAnthropicKey();
+  if (!key) {
+    document.getElementById('api-key-bar').classList.add('show');
+    throw new Error('No API key saved yet — fill in the yellow box at the top of the page.');
+  }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1500, system: EXTRACT_PROMPT, messages })
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API error ${res.status}`); }
+  const data = await res.json();
+  const text = data.content?.find(b => b.type === 'text')?.text || '';
+  return JSON.parse(text.replace(/```json|```/g, '').trim());
+}
+
+function fillFormFromExtracted(r, sourceUrl) {
+  document.getElementById('f-name').value = r.name || '';
+  document.getElementById('f-ingredients').value = r.ingredients || '';
+  document.getElementById('f-instructions').value = r.instructions || '';
+  if (r.season) document.getElementById('f-season').value = r.season;
+  if (r.category) document.getElementById('f-category').value = r.category;
+  document.getElementById('f-occasion').value = r.occasion || '';
+  document.getElementById('f-source').value = sourceUrl || r.source || '';
+  srcType = 'url';
+  document.querySelectorAll('.src-btn').forEach(b => b.classList.remove('active'));
+  const urlBtn = document.querySelector('.src-btn[data-src="url"]');
+  if (urlBtn) urlBtn.classList.add('active');
+}
+
+async function extractFromLink() {
+  const url = document.getElementById('imp-url').value.trim();
+  if (!url) return;
+  const btn = document.getElementById('imp-go-btn');
+  btn.disabled = true;
+  setImportStatus('loading', 'Fetching page...');
+  try {
+    // Use CORS proxy to fetch the page
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const proxyRes = await fetch(proxyUrl);
+    const proxyData = await proxyRes.json();
+    // Strip HTML tags and collapse whitespace, cap at 12000 chars
+    const raw = (proxyData.contents || '').replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 12000);
+    if (!raw) throw new Error('Could not read page content. The site may block scrapers.');
+    setImportStatus('loading', 'Extracting recipe...');
+    const extracted = await callClaude([{ role: 'user', content: `Recipe page content from ${url}:\n\n${raw}` }]);
+    fillFormFromExtracted(extracted, url);
+    setImportStatus('success', 'Done! Review the fields below and save when ready.');
+  } catch (e) {
+    setImportStatus('error', e.message || 'Something went wrong. Try another URL or add manually.');
+  }
+  btn.disabled = false;
+}
+
+async function extractFromPhoto(event) {
+  const file = event.target.files[0]; if (!file) return;
+  setImportStatus('loading', 'Reading photo...');
+  try {
+    const base64 = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = e => res(e.target.result.split(',')[1]);
+      reader.onerror = () => rej(new Error('Could not read image file.'));
+      reader.readAsDataURL(file);
+    });
+    setImportStatus('loading', 'Extracting recipe...');
+    const extracted = await callClaude([{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: file.type || 'image/jpeg', data: base64 } },
+        { type: 'text', text: 'Extract the recipe from this image.' }
+      ]
+    }]);
+    fillFormFromExtracted(extracted, '');
+    srcType = 'other';
+    document.querySelectorAll('.src-btn').forEach(b => b.classList.remove('active'));
+    const otherBtn = document.querySelector('.src-btn[data-src="other"]');
+    if (otherBtn) otherBtn.classList.add('active');
+    document.getElementById('f-source').placeholder = 'e.g. Grandma, memory...';
+    setImportStatus('success', 'Done! Review the fields below and save when ready.');
+  } catch (e) {
+    setImportStatus('error', e.message || 'Could not extract recipe from that image.');
+  }
+  event.target.value = '';
+}
+
+let recipes = [], filterSeason = 'all', filterCat = 'all', filterOccasion = 'all', searchQuery = '';
 let editingId = null, viewingId = null, srcType = 'url';
 let deletedRecipe = null, deleteTimeout = null, toastTimeout = null;
+let filteredForView = [];
 
 async function apiCall(params) {
   const url = new URL(API);
@@ -346,16 +609,83 @@ function importBackup(e) {
   reader.readAsText(f); e.target.value = '';
 }
 
-function render() {
-  const grid = document.getElementById('recipe-grid'), empty = document.getElementById('empty-state');
+// ─── Occasions helpers ────────────────────────────────────────────────────────
+function getUniqueOccasions() {
+  const set = new Set();
+  recipes.forEach(r => { if (r.occasion && r.occasion.trim()) set.add(r.occasion.trim()); });
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
+}
+
+function renderOccasionFilters() {
+  const occasions = getUniqueOccasions();
+  const row = document.getElementById('occasion-filter-row');
+  const group = document.getElementById('occasion-filter-group');
+  if (!occasions.length) { row.className = 'occasion-row'; return; }
+  row.className = 'occasion-row show';
+  group.innerHTML = `<button class="filter-btn rose${filterOccasion === 'all' ? ' active' : ''}" data-occ="all">All occasions</button>` +
+    occasions.map(o => `<button class="filter-btn rose${filterOccasion === o ? ' active' : ''}" data-occ="${o}">${o}</button>`).join('');
+  group.querySelectorAll('[data-occ]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterOccasion = btn.dataset.occ;
+      renderOccasionFilters();
+      render();
+    });
+  });
+}
+
+// ─── Occasion combobox in form ────────────────────────────────────────────────
+let occasionCloseTimer = null;
+
+function openOccasionDropdown() {
+  if (occasionCloseTimer) { clearTimeout(occasionCloseTimer); occasionCloseTimer = null; }
+  filterOccasionDropdown();
+}
+
+function scheduleCloseOccasionDropdown() {
+  occasionCloseTimer = setTimeout(() => {
+    document.getElementById('occasion-dropdown').classList.remove('open');
+  }, 200);
+}
+
+function filterOccasionDropdown() {
+  const input = document.getElementById('f-occasion');
+  const val = input.value.trim().toLowerCase();
+  const occasions = getUniqueOccasions();
+  const matches = val ? occasions.filter(o => o.toLowerCase().includes(val)) : occasions;
+  const dd = document.getElementById('occasion-dropdown');
+  let html = matches.map(o =>
+    `<div class="occasion-opt" onmousedown="pickOccasion('${o.replace(/'/g,"\\'")}')">&#127881; ${o}</div>`
+  ).join('');
+  if (val && !occasions.find(o => o.toLowerCase() === val)) {
+    html += `<div class="occasion-opt new-opt" onmousedown="pickOccasion('${val.replace(/'/g,"\\'")}')">+ Add "${val}"</div>`;
+  }
+  dd.innerHTML = html || '<div class="occasion-opt" style="color:#999;pointer-events:none">No occasions yet</div>';
+  dd.classList.toggle('open', occasions.length > 0 || val.length > 0);
+}
+
+function pickOccasion(val) {
+  const capitalized = val.charAt(0).toUpperCase() + val.slice(1);
+  document.getElementById('f-occasion').value = capitalized;
+  document.getElementById('occasion-dropdown').classList.remove('open');
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function getFiltered() {
   const q = searchQuery.toLowerCase();
-  const filtered = recipes.filter(r =>
+  return recipes.filter(r =>
     (filterSeason === 'all' || r.season === filterSeason) &&
     (filterCat === 'all' || r.category === filterCat) &&
+    (filterOccasion === 'all' || (r.occasion || '').trim() === filterOccasion) &&
     (!q || r.name.toLowerCase().includes(q) || (r.ingredients || '').toLowerCase().includes(q))
   );
+}
+
+function render() {
+  const grid = document.getElementById('recipe-grid'), empty = document.getElementById('empty-state');
+  const filtered = getFiltered();
   const total = recipes.length;
   document.getElementById('recipe-count').textContent = total === 0 ? 'No recipes yet' : `${total} recipe${total !== 1 ? 's' : ''}`;
+  renderOccasionFilters();
   if (!filtered.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   grid.innerHTML = filtered.map(r => {
@@ -366,6 +696,7 @@ function render() {
       <div class="card-tags">
         ${r.season ? `<span class="tag tag-season">${r.season}</span>` : ''}
         ${r.category ? `<span class="tag tag-cat">${r.category}</span>` : ''}
+        ${r.occasion ? `<span class="tag tag-occasion">&#127881; ${r.occasion}</span>` : ''}
       </div>
       <div class="card-name">${r.name}</div>
       ${srcLabel ? `<div class="card-source">${srcLabel}</div>` : ''}
@@ -378,13 +709,30 @@ function render() {
   }).join('');
 }
 
+// ─── View modal ───────────────────────────────────────────────────────────────
 function openView(id) {
+  filteredForView = getFiltered();
   viewingId = id;
+  populateView(id);
+  document.getElementById('view-modal').classList.add('open');
+}
+
+function populateView(id) {
   const r = recipes.find(x => x.id === id); if (!r) return;
+  viewingId = id;
+
+  // Nav arrows
+  const idx = filteredForView.findIndex(x => x.id === id);
+  const total = filteredForView.length;
+  document.getElementById('view-nav-count').textContent = total > 1 ? `${idx + 1} / ${total}` : '';
+  document.getElementById('view-prev').disabled = idx <= 0;
+  document.getElementById('view-next').disabled = idx >= total - 1;
+
   document.getElementById('v-name').textContent = r.name;
   document.getElementById('v-tags').innerHTML =
     (r.season ? `<span class="tag tag-season">${r.season}</span>` : '') +
     (r.category ? `<span class="tag tag-cat">${r.category}</span>` : '') +
+    (r.occasion ? `<span class="tag tag-occasion">&#127881; ${r.occasion}</span>` : '') +
     (r.made ? `<span class="tag" style="background:var(--sage-light);color:var(--forest)">✓ Made</span>` : '');
   const vs = document.getElementById('v-source');
   if (r.sourceType === 'url' && r.source) vs.innerHTML = `<a href="${r.source}" target="_blank" rel="noopener">${r.source}</a>`;
@@ -395,11 +743,34 @@ function openView(id) {
   const inst = (r.instructions || '').trim();
   document.getElementById('v-instructions').textContent = inst;
   document.getElementById('v-inst-section').style.display = inst ? 'block' : 'none';
-  document.getElementById('view-modal').classList.add('open');
+
+  // Scroll modal to top on navigation
+  const inner = document.getElementById('view-modal-inner');
+  if (inner) inner.scrollTop = 0;
 }
+
+function navigateView(dir) {
+  const idx = filteredForView.findIndex(r => r.id === viewingId);
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= filteredForView.length) return;
+  populateView(filteredForView[newIdx].id);
+}
+
 function closeView() { document.getElementById('view-modal').classList.remove('open'); viewingId = null; }
 function editFromView() { const id = viewingId; closeView(); openEdit(id); }
 
+// Touch swipe on view modal
+(function() {
+  let tx = 0;
+  const modal = document.getElementById('view-modal');
+  modal.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  modal.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) navigateView(dx < 0 ? 1 : -1);
+  }, { passive: true });
+})();
+
+// ─── Form ─────────────────────────────────────────────────────────────────────
 function setSrcType(type, btn) {
   srcType = type;
   document.querySelectorAll('.src-btn').forEach(b => b.classList.remove('active'));
@@ -413,6 +784,7 @@ function openAdd() {
   document.getElementById('modal-title').innerHTML = 'Add a <em>recipe</em>';
   document.getElementById('submit-btn').textContent = 'Save recipe';
   document.getElementById('src-type-row').style.display = 'flex';
+  document.getElementById('import-section').style.display = 'block';
   document.getElementById('add-modal').classList.add('open');
 }
 function closeAdd() { document.getElementById('add-modal').classList.remove('open'); editingId = null; }
@@ -423,23 +795,31 @@ function openEdit(id) {
   document.getElementById('modal-title').innerHTML = 'Edit <em>recipe</em>';
   document.getElementById('submit-btn').textContent = 'Update recipe';
   document.getElementById('src-type-row').style.display = 'none';
+  document.getElementById('import-section').style.display = 'none';
   document.getElementById('f-name').value = r.name || '';
   document.getElementById('f-ingredients').value = r.ingredients || '';
   document.getElementById('f-instructions').value = r.instructions || '';
   document.getElementById('f-season').value = r.season || '';
   document.getElementById('f-category').value = r.category || '';
+  document.getElementById('f-occasion').value = r.occasion || '';
   document.getElementById('f-source').value = r.source || '';
   srcType = r.sourceType || 'other';
   document.getElementById('add-modal').classList.add('open');
 }
 
 function resetForm() {
-  ['f-name','f-ingredients','f-instructions','f-source'].forEach(id => {
+  ['f-name','f-ingredients','f-instructions','f-source','f-occasion'].forEach(id => {
     const el = document.getElementById(id); if (el) { el.value = ''; el.classList.remove('err'); }
   });
   document.getElementById('f-season').value = ''; document.getElementById('f-season').classList.remove('err');
   document.getElementById('f-category').value = ''; document.getElementById('f-category').classList.remove('err');
   document.getElementById('validation').className = 'validation';
+  document.getElementById('occasion-dropdown').classList.remove('open');
+  importMode = null;
+  ['imp-link-btn','imp-photo-btn'].forEach(id => document.getElementById(id).classList.remove('active'));
+  ['imp-link-body','imp-photo-body'].forEach(id => document.getElementById(id).classList.remove('open'));
+  document.getElementById('imp-url').value = '';
+  setImportStatus('', '');
   srcType = 'url';
   document.querySelectorAll('.src-btn').forEach(b => b.classList.remove('active'));
   const first = document.querySelector('.src-btn[data-src="url"]');
@@ -460,12 +840,14 @@ async function saveRecipe() {
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
+  const occasion = document.getElementById('f-occasion').value.trim();
   const recipe = {
     id: editingId || Date.now().toString(),
     name,
     ingredients: document.getElementById('f-ingredients').value.trim(),
     instructions: document.getElementById('f-instructions').value.trim(),
     season, category,
+    occasion: occasion || '',
     sourceType: srcType,
     source: document.getElementById('f-source').value.trim(),
     made: editingId ? (recipes.find(r => r.id === editingId)?.made || false) : false,
@@ -539,6 +921,7 @@ document.querySelectorAll('[data-cat]').forEach(btn =>
 document.getElementById('search-input').addEventListener('input', e => { searchQuery = e.target.value; render(); });
 
 loadRecipes();
+checkApiKey();
 </script>
 </body>
 </html>
