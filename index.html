@@ -63,20 +63,35 @@
   .spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.65rem; }
-  .card { background: var(--warm-white); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem; transition: box-shadow 0.2s; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem; }
-  .card:hover { box-shadow: 0 4px 20px rgba(43,33,35,0.1); }
-  .card-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
-  .tag { font-size: 0.62rem; padding: 0.14rem 0.45rem; border-radius: 20px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+  .filter-bar { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.65rem; flex-wrap: wrap; }
+  .filter-drop-wrap { position: relative; }
+  .filter-drop-btn { font-family: var(--font-body); font-size: 0.82rem; padding: 0.4rem 0.9rem; border: 1px solid var(--border); border-radius: 20px; background: var(--warm-white); color: var(--near-black); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
+  .filter-drop-btn.season-btn { background: var(--sage-light); border-color: var(--sage); color: var(--forest); }
+  .filter-drop-btn.season-btn.season-active { background: var(--forest); border-color: var(--forest); color: #fff; }
+  .filter-drop-btn.cat-btn { background: var(--mauve-light); border-color: #c9a8b5; color: var(--burgundy); }
+  .filter-drop-btn.cat-btn.cat-active { background: var(--burgundy); border-color: var(--burgundy); color: #fff; }
+  .filter-drop-btn.occ-btn { background: var(--gold-light); border-color: #d4b060; color: #6b5210; }
+  .filter-drop-btn.occ-btn.occ-active { background: #6b5210; border-color: #6b5210; color: #fff; }
+  .drop-arrow { font-size: 0.65rem; opacity: 0.7; }
+  .dropdown-menu { display: none; position: absolute; top: calc(100% + 5px); left: 0; background: var(--warm-white); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 4px 20px rgba(43,33,35,0.12); z-index: 200; min-width: 150px; overflow: hidden; }
+  .dropdown-menu.open { display: block; }
+  .dropdown-opt { padding: 0.5rem 0.9rem; font-size: 0.85rem; cursor: pointer; transition: background 0.12s; white-space: nowrap; }
+  .dropdown-opt:hover { background: var(--cream); }
+  .dropdown-opt.selected { font-weight: 500; color: var(--burgundy); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.5rem; }
+  .card { background: var(--warm-white); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.6rem; transition: box-shadow 0.15s; cursor: pointer; display: flex; flex-direction: column; gap: 0.25rem; }
+  .card:hover { box-shadow: 0 3px 12px rgba(43,33,35,0.1); }
+  .card-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  .tag { font-size: 0.55rem; padding: 0.1rem 0.38rem; border-radius: 20px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
   .tag-season { background: var(--sage-light); color: var(--forest); }
   .tag-cat { background: var(--gold-light); color: #6b5210; }
   .tag-occasion { background: var(--gold-light); color: #6b5210; }
-  .card-name { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; line-height: 1.25; color: var(--near-black); }
-  .card-source { font-size: 0.68rem; color: var(--burgundy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .card-actions { display: flex; gap: 0.35rem; margin-top: auto; padding-top: 0.4rem; align-items: center; }
-  .card-btn { font-family: var(--font-body); font-size: 0.68rem; padding: 0.2rem 0.55rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--burgundy); transition: all 0.15s; font-weight: 500; }
+  .card-name { font-family: var(--font-display); font-size: 0.78rem; font-weight: 600; line-height: 1.2; color: var(--near-black); }
+  .card-actions { display: flex; gap: 0.28rem; margin-top: 0.2rem; align-items: center; }
+  .card-btn { font-family: var(--font-body); font-size: 0.6rem; padding: 0.14rem 0.42rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--burgundy); transition: all 0.15s; font-weight: 500; }
   .card-btn:hover { border-color: var(--burgundy); background: var(--mauve-light); }
-  .made-btn { font-family: var(--font-body); font-size: 0.68rem; padding: 0.2rem 0.55rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: #999; transition: all 0.15s; font-weight: 500; margin-left: auto; }
+  .made-btn { font-family: var(--font-body); font-size: 0.6rem; padding: 0.14rem 0.42rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: #999; transition: all 0.15s; font-weight: 500; margin-left: auto; }
   .made-btn.made { background: var(--sage-light); border-color: var(--sage); color: var(--forest); }
   .made-btn:hover { border-color: var(--sage); color: var(--forest); }
 
@@ -129,8 +144,14 @@
   .view-nav-btn:hover:not(:disabled) { border-color: var(--burgundy); background: var(--mauve-light); }
   .view-nav-btn:disabled { opacity: 0.3; cursor: default; }
   .view-nav-count { font-size: 0.75rem; color: #999; white-space: nowrap; }
-  .view-edit-btn { font-family: var(--font-body); font-size: 0.82rem; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--burgundy); background: transparent; color: var(--burgundy); font-weight: 500; transition: all 0.15s; display: inline-block; }
+  .view-actions { display: flex; gap: 0.5rem; align-items: center; }
+  .view-edit-btn { font-family: var(--font-body); font-size: 0.82rem; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--burgundy); background: transparent; color: var(--burgundy); font-weight: 500; transition: all 0.15s; }
   .view-edit-btn:hover { background: var(--mauve-light); }
+  .view-del-btn { font-family: var(--font-body); font-size: 0.82rem; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: #999; font-weight: 500; transition: all 0.15s; }
+  .view-del-btn:hover { border-color: var(--burgundy); color: var(--burgundy); }
+  .view-made-btn { font-family: var(--font-body); font-size: 0.82rem; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: #999; font-weight: 500; transition: all 0.15s; }
+  .view-made-btn.made { background: var(--sage-light); border-color: var(--sage); color: var(--forest); }
+  .view-made-btn:hover { border-color: var(--sage); color: var(--forest); }
 
   .view-title { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; margin-bottom: 0.75rem; line-height: 1.2; }
   .view-tags { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
@@ -211,26 +232,36 @@
     <input type="file" id="import-input" class="import-input" accept=".json" onchange="importBackup(event)">
   </div>
 
-  <div class="filter-scroll">
-    <button class="filter-btn forest active" data-season="all">All seasons</button>
-    <button class="filter-btn forest" data-season="Spring">Spring</button>
-    <button class="filter-btn forest" data-season="Summer">Summer</button>
-    <button class="filter-btn forest" data-season="Fall">Fall</button>
-    <button class="filter-btn forest" data-season="Winter">Winter</button>
-    <button class="filter-btn forest" data-season="All Year">All Year</button>
-  </div>
-
-  <div class="filter-scroll">
-    <button class="filter-btn active" data-cat="all">All</button>
-    <button class="filter-btn" data-cat="Breakfast">Breakfast</button>
-    <button class="filter-btn" data-cat="Lunch">Lunch</button>
-    <button class="filter-btn" data-cat="Dinner">Dinner</button>
-    <button class="filter-btn" data-cat="Snack">Snack</button>
-    <button class="filter-btn" data-cat="Dessert">Dessert</button>
-    <button class="filter-btn" data-cat="Drinks">Drinks</button>
-    <button class="filter-btn" data-cat="Apéro">Apéro</button>
-    <button class="filter-btn" data-cat="Staples">Staples</button>
-    <button class="filter-btn" data-cat="M+R">M+R</button>
+  <div class="filter-bar">
+    <div class="filter-drop-wrap">
+      <button class="filter-drop-btn season-btn" id="season-drop-btn" onclick="toggleDropdown('season')">
+        <span id="season-drop-label">All year</span><span class="drop-arrow">▾</span>
+      </button>
+      <div class="dropdown-menu" id="season-drop-menu">
+        <div class="dropdown-opt selected" data-season="all">All year</div>
+        <div class="dropdown-opt" data-season="Spring">Spring</div>
+        <div class="dropdown-opt" data-season="Summer">Summer</div>
+        <div class="dropdown-opt" data-season="Fall">Fall</div>
+        <div class="dropdown-opt" data-season="Winter">Winter</div>
+      </div>
+    </div>
+    <div class="filter-drop-wrap">
+      <button class="filter-drop-btn cat-btn" id="cat-drop-btn" onclick="toggleDropdown('cat')">
+        <span id="cat-drop-label">All categories</span><span class="drop-arrow">▾</span>
+      </button>
+      <div class="dropdown-menu" id="cat-drop-menu">
+        <div class="dropdown-opt selected" data-cat="all">All</div>
+        <div class="dropdown-opt" data-cat="Breakfast">Breakfast</div>
+        <div class="dropdown-opt" data-cat="Lunch">Lunch</div>
+        <div class="dropdown-opt" data-cat="Dinner">Dinner</div>
+        <div class="dropdown-opt" data-cat="Snack">Snack</div>
+        <div class="dropdown-opt" data-cat="Dessert">Dessert</div>
+        <div class="dropdown-opt" data-cat="Drinks">Drinks</div>
+        <div class="dropdown-opt" data-cat="Apéro">Apéro</div>
+        <div class="dropdown-opt" data-cat="Staples">Staples</div>
+        <div class="dropdown-opt" data-cat="M+R">M+R</div>
+      </div>
+    </div>
   </div>
 
   <div class="occasion-row" id="occasion-filter-row">
@@ -597,14 +628,20 @@ function renderOccasionFilters() {
   const group = document.getElementById('occasion-filter-group');
   if (!occasions.length) { row.className = 'occasion-row'; return; }
   row.className = 'occasion-row show';
-  group.innerHTML = `<button class="filter-btn rose${filterOccasion === 'all' ? ' active' : ''}" data-occ="all">All occasions</button>` +
-    occasions.map(o => `<button class="filter-btn rose${filterOccasion === o ? ' active' : ''}" data-occ="${o}">${o}</button>`).join('');
-  group.querySelectorAll('[data-occ]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterOccasion = btn.dataset.occ;
-      renderOccasionFilters();
-      render();
-    });
+  group.innerHTML = `
+    <div class="filter-drop-wrap">
+      <button class="filter-drop-btn occ-btn${filterOccasion !== 'all' ? ' occ-active' : ''}" id="occ-drop-btn" onclick="toggleDropdown('occ')">
+        <span id="occ-drop-label">${filterOccasion === 'all' ? 'Occasion' : filterOccasion}</span><span class="drop-arrow">▾</span>
+      </button>
+      <div class="dropdown-menu" id="occ-drop-menu">
+        <div class="dropdown-opt${filterOccasion === 'all' ? ' selected' : ''}" data-occ="all">All occasions</div>
+        ${occasions.map(o => `<div class="dropdown-opt${filterOccasion === o ? ' selected' : ''}" data-occ="${o}">🎉 ${o}</div>`).join('')}
+      </div>
+    </div>`;
+  document.getElementById('occ-drop-menu').addEventListener('click', e => {
+    const opt = e.target.closest('[data-occ]'); if (!opt) return;
+    filterOccasion = opt.dataset.occ;
+    renderOccasionFilters(); closeAllDropdowns(); render();
   });
 }
 
@@ -675,7 +712,6 @@ function render() {
         ${r.occasion ? `<span class="tag tag-occasion">&#127881; ${r.occasion}</span>` : ''}
       </div>
       <div class="card-name">${r.name}</div>
-      ${srcLabel ? `<div class="card-source">${srcLabel}</div>` : ''}
       <div class="card-actions">
         <button class="card-btn" onclick="event.stopPropagation();openEdit('${r.id}')">Edit</button>
         <button class="card-btn" onclick="event.stopPropagation();confirmDelete('${r.id}')">Delete</button>
@@ -881,12 +917,37 @@ function showToast(msg, showUndo) {
 }
 function hideToast() { document.getElementById('toast').classList.remove('show'); }
 
-document.querySelectorAll('[data-season]').forEach(btn =>
-  btn.addEventListener('click', () => { document.querySelectorAll('[data-season]').forEach(b => b.classList.remove('active')); btn.classList.add('active'); filterSeason = btn.dataset.season; render(); })
-);
-document.querySelectorAll('[data-cat]').forEach(btn =>
-  btn.addEventListener('click', () => { document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active')); btn.classList.add('active'); filterCat = btn.dataset.cat; render(); })
-);
+function toggleDropdown(type) {
+  const menu = document.getElementById(`${type}-drop-menu`);
+  const isOpen = menu.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) menu.classList.add('open');
+}
+function closeAllDropdowns() {
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.filter-drop-wrap') && !e.target.closest('.occasion-row')) closeAllDropdowns();
+});
+
+document.getElementById('season-drop-menu').addEventListener('click', e => {
+  const opt = e.target.closest('[data-season]'); if (!opt) return;
+  filterSeason = opt.dataset.season;
+  document.getElementById('season-drop-label').textContent = opt.textContent;
+  document.getElementById('season-drop-btn').classList.toggle('season-active', filterSeason !== 'all');
+  document.querySelectorAll('#season-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === opt));
+  closeAllDropdowns(); render();
+});
+
+document.getElementById('cat-drop-menu').addEventListener('click', e => {
+  const opt = e.target.closest('[data-cat]'); if (!opt) return;
+  filterCat = opt.dataset.cat;
+  document.getElementById('cat-drop-label').textContent = filterCat === 'all' ? 'All categories' : opt.textContent;
+  document.getElementById('cat-drop-btn').classList.toggle('cat-active', filterCat !== 'all');
+  document.querySelectorAll('#cat-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === opt));
+  closeAllDropdowns(); render();
+});
+
 document.getElementById('search-input').addEventListener('input', e => { searchQuery = e.target.value; render(); });
 
 loadRecipes();
