@@ -48,9 +48,6 @@
   .add-btn { font-family: var(--font-body); font-size: 0.85rem; padding: 0.5rem 1.25rem; background: var(--burgundy); color: #fff; border: none; border-radius: 20px; cursor: pointer; font-weight: 500; transition: background 0.15s; white-space: nowrap; }
   .add-btn:hover { background: var(--near-black); }
 
-  .occasion-row { display: none; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.2rem; margin-bottom: 0.6rem; scrollbar-width: none; -webkit-overflow-scrolling: touch; align-items: center; }
-  .occasion-row::-webkit-scrollbar { display: none; }
-  .occasion-row.show { display: flex; }
   .occasion-label { font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: #6b5210; white-space: nowrap; flex-shrink: 0; }
 
   .search-input { font-family: var(--font-body); font-size: 0.85rem; padding: 0.42rem 0.9rem; border: 1px solid var(--border); border-radius: 20px; background: var(--warm-white); color: var(--near-black); transition: border-color 0.15s; }
@@ -262,11 +259,7 @@
         <div class="dropdown-opt" data-cat="M+R">M+R</div>
       </div>
     </div>
-  </div>
-
-  <div class="occasion-row" id="occasion-filter-row">
-    <span class="occasion-label">Occasion</span>
-    <div id="occasion-filter-group" style="display:flex;gap:0.4rem;flex-shrink:0"></div>
+    <div id="occasion-filter-group" style="margin-left:auto"></div>
   </div>
 
   <div class="status-bar" id="status-bar">
@@ -624,13 +617,11 @@ function getUniqueOccasions() {
 
 function renderOccasionFilters() {
   const occasions = getUniqueOccasions();
-  const row = document.getElementById('occasion-filter-row');
   const group = document.getElementById('occasion-filter-group');
-  if (!occasions.length) { row.className = 'occasion-row'; return; }
-  row.className = 'occasion-row show';
+  if (!occasions.length) { group.innerHTML = ''; return; }
   group.innerHTML = `
-    <div class="filter-drop-wrap">
-      <button class="filter-drop-btn occ-btn${filterOccasion !== 'all' ? ' occ-active' : ''}" id="occ-drop-btn" onclick="toggleDropdown('occ')">
+    <div class="filter-drop-wrap" id="occ-drop-wrap">
+      <button class="filter-drop-btn occ-btn${filterOccasion !== 'all' ? ' occ-active' : ''}" onclick="toggleDropdown('occ')">
         <span id="occ-drop-label">${filterOccasion === 'all' ? 'Occasion' : filterOccasion}</span><span class="drop-arrow">▾</span>
       </button>
       <div class="dropdown-menu" id="occ-drop-menu">
@@ -638,11 +629,6 @@ function renderOccasionFilters() {
         ${occasions.map(o => `<div class="dropdown-opt${filterOccasion === o ? ' selected' : ''}" data-occ="${o}">🎉 ${o}</div>`).join('')}
       </div>
     </div>`;
-  document.getElementById('occ-drop-menu').addEventListener('click', e => {
-    const opt = e.target.closest('[data-occ]'); if (!opt) return;
-    filterOccasion = opt.dataset.occ;
-    renderOccasionFilters(); closeAllDropdowns(); render();
-  });
 }
 
 // ─── Occasion combobox in form ────────────────────────────────────────────────
@@ -927,7 +913,16 @@ function closeAllDropdowns() {
   document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
 }
 document.addEventListener('click', e => {
-  if (!e.target.closest('.filter-drop-wrap') && !e.target.closest('.occasion-row')) closeAllDropdowns();
+  if (!e.target.closest('.filter-drop-wrap')) closeAllDropdowns();
+});
+
+document.addEventListener('click', e => {
+  const opt = e.target.closest('[data-occ]');
+  if (!opt) return;
+  filterOccasion = opt.dataset.occ;
+  closeAllDropdowns();
+  renderOccasionFilters();
+  render();
 });
 
 document.getElementById('season-drop-menu').addEventListener('click', e => {
