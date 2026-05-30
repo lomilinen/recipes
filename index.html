@@ -238,7 +238,7 @@
 
   <div class="filter-bar">
     <div class="filter-drop-wrap">
-      <button class="filter-drop-btn season-btn" id="season-drop-btn" onclick="toggleDropdown('season')">
+      <button class="filter-drop-btn season-btn" id="season-drop-btn" onclick="toggleDropdown('season', event)">
         <span id="season-drop-label">All year</span><span class="drop-arrow">▾</span>
       </button>
       <div class="dropdown-menu" id="season-drop-menu">
@@ -250,8 +250,8 @@
       </div>
     </div>
     <div class="filter-drop-wrap">
-      <button class="filter-drop-btn cat-btn" id="cat-drop-btn" onclick="toggleDropdown('cat')">
-        <span id="cat-drop-label">All categories</span><span class="drop-arrow">▾</span>
+      <button class="filter-drop-btn cat-btn" id="cat-drop-btn" onclick="toggleDropdown('cat', event)">
+        <span id="cat-drop-label">All</span><span class="drop-arrow">▾</span>
       </button>
       <div class="dropdown-menu" id="cat-drop-menu">
         <div class="dropdown-opt selected" data-cat="all">All</div>
@@ -267,7 +267,7 @@
     </div>
     <div id="occasion-filter-group"></div>
     <div class="filter-drop-wrap">
-      <button class="filter-drop-btn status-btn" id="status-drop-btn" onclick="toggleDropdown('status')">
+      <button class="filter-drop-btn status-btn" id="status-drop-btn" onclick="toggleDropdown('status', event)">
         <span id="status-drop-label">Status</span><span class="drop-arrow">▾</span>
       </button>
       <div class="dropdown-menu" id="status-drop-menu">
@@ -638,7 +638,7 @@ function renderOccasionFilters() {
   if (!occasions.length) { group.innerHTML = ''; return; }
   group.innerHTML = `
     <div class="filter-drop-wrap" id="occ-drop-wrap">
-      <button class="filter-drop-btn occ-btn${filterOccasion !== 'all' ? ' occ-active' : ''}" onclick="toggleDropdown('occ')">
+      <button class="filter-drop-btn occ-btn${filterOccasion !== 'all' ? ' occ-active' : ''}" onclick="toggleDropdown('occ', event)">
         <span id="occ-drop-label">${filterOccasion === 'all' ? 'Occasion' : filterOccasion}</span><span class="drop-arrow">▾</span>
       </button>
       <div class="dropdown-menu" id="occ-drop-menu">
@@ -930,8 +930,10 @@ function showToast(msg, showUndo) {
 }
 function hideToast() { document.getElementById('toast').classList.remove('show'); }
 
-function toggleDropdown(type) {
+function toggleDropdown(type, event) {
+  if (event) event.stopPropagation();
   const menu = document.getElementById(`${type}-drop-menu`);
+  if (!menu) return;
   const isOpen = menu.classList.contains('open');
   closeAllDropdowns();
   if (!isOpen) menu.classList.add('open');
@@ -964,7 +966,7 @@ document.getElementById('season-drop-menu').addEventListener('click', e => {
 document.getElementById('cat-drop-menu').addEventListener('click', e => {
   const opt = e.target.closest('[data-cat]'); if (!opt) return;
   filterCat = opt.dataset.cat;
-  document.getElementById('cat-drop-label').textContent = filterCat === 'all' ? 'All categories' : opt.textContent;
+  document.getElementById('cat-drop-label').textContent = filterCat === 'all' ? 'All' : opt.textContent;
   document.getElementById('cat-drop-btn').classList.toggle('cat-active', filterCat !== 'all');
   document.querySelectorAll('#cat-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === opt));
   closeAllDropdowns(); render();
