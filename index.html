@@ -62,6 +62,9 @@
 
   .filter-drop-btn.status-btn { background: var(--mauve-light); border-color: #c9a8b5; color: var(--near-black); }
   .filter-drop-btn.status-btn.status-active { background: var(--near-black); border-color: var(--near-black); color: #fff; }
+  .filter-bar { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.65rem; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 0.1rem; }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-bar > * { flex-shrink: 0; }
   .filter-drop-wrap { position: relative; }
   .filter-drop-btn { font-family: var(--font-body); font-size: 0.82rem; padding: 0.4rem 0.9rem; border: 1px solid var(--border); border-radius: 20px; background: var(--warm-white); color: var(--near-black); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
   .filter-drop-btn.season-btn { background: var(--sage-light); border-color: var(--sage); color: var(--forest); }
