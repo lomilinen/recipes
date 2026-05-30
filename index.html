@@ -92,10 +92,10 @@
   .card-actions { display: flex; gap: 0.28rem; margin-top: 0.2rem; align-items: center; }
   .card-btn { font-family: var(--font-body); font-size: 0.6rem; padding: 0.14rem 0.42rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--burgundy); transition: all 0.15s; font-weight: 500; }
   .card-btn:hover { border-color: var(--burgundy); background: var(--mauve-light); }
-  .made-btn { font-family: var(--font-body); font-size: 0.6rem; padding: 0.14rem 0.42rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: #999; transition: all 0.15s; font-weight: 500; margin-left: auto; }
+  .made-btn { font-family: var(--font-body); font-size: 0.75rem; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; border: 1px solid var(--border); background: transparent; color: #999; transition: all 0.15s; margin-left: auto; }
   .made-btn.made { background: var(--sage-light); border-color: var(--sage); color: var(--forest); }
   .made-btn:hover { border-color: var(--sage); color: var(--forest); }
-  .staples-btn { font-family: var(--font-body); font-size: 0.6rem; padding: 0.14rem 0.42rem; border-radius: 20px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: #999; transition: all 0.15s; font-weight: 500; }
+  .staples-btn { font-family: var(--font-body); font-size: 0.75rem; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; border: 1px solid var(--border); background: transparent; color: #999; transition: all 0.15s; }
   .staples-btn.stapled { background: var(--gold-light); border-color: #d4b060; color: #6b5210; }
   .staples-btn:hover { border-color: #d4b060; color: #6b5210; }
 
@@ -719,8 +719,8 @@ function render() {
       <div class="card-actions">
         <button class="card-btn" onclick="event.stopPropagation();openEdit('${r.id}')">Edit</button>
         <button class="card-btn" onclick="event.stopPropagation();confirmDelete('${r.id}')">Delete</button>
-        <button class="staples-btn${r.staples ? ' stapled' : ''}" onclick="event.stopPropagation();toggleStaples('${r.id}')">${r.staples ? '★ Staple' : '☆ Staple'}</button>
-        <button class="made-btn${r.made ? ' made' : ''}" onclick="event.stopPropagation();toggleMade('${r.id}')">${r.made ? '✓ Made' : '○ Made'}</button>
+        <button class="staples-btn${r.staples ? ' stapled' : ''}" onclick="event.stopPropagation();toggleStaples('${r.id}')" title="Staple">${r.staples ? '★' : '☆'}</button>
+        <button class="made-btn${r.made ? ' made' : ''}" onclick="event.stopPropagation();toggleMade('${r.id}')" title="Made">${r.made ? '✓' : '○'}</button>
       </div>
     </div>`;
   }).join('');
