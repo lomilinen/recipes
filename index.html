@@ -485,9 +485,6 @@ async function loadRecipes() {
     const data = await apiCall({ action: 'getRecipes' });
     recipes = (data.recipes || []).map(r => ({
       ...r,
-      id: r.id || '',
-      sourceType: r.sourcetype || r.sourceType || 'other',
-      createdAt: r.createdat || r.createdAt || '',
       made: r.made === true || r.made === 'TRUE',
       staples: r.staples === true || r.staples === 'TRUE'
     }));
@@ -705,7 +702,7 @@ function getFiltered() {
       (filterOccasion === 'all' || (r.occasion || '').trim() === filterOccasion) &&
       (filterStatus === 'all' || (filterStatus === 'made' && r.made) || (filterStatus === 'unmade' && !r.made) || (filterStatus === 'staples' && r.staples)) &&
       (!q || r.name.toLowerCase().includes(q) || (r.ingredients || '').toLowerCase().includes(q));
-  }).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  }).sort((a, b) => new Date(b.createdat || 0) - new Date(a.createdat || 0));
 }
 
 function render() {
@@ -775,7 +772,7 @@ function populateView(id) {
     (r.occasion ? `<span class="tag tag-occasion">&#127881; ${r.occasion}</span>` : '') +
     (r.made ? `<span class="tag" style="background:var(--sage-light);color:var(--forest)">✓ Made</span>` : '');
   const vs = document.getElementById('v-source');
-  if (r.sourceType === 'url' && r.source) vs.innerHTML = `<a href="${r.source}" target="_blank" rel="noopener">${r.source}</a>`;
+  if (r.sourcetype === 'url' && r.source) vs.innerHTML = `<a href="${r.source}" target="_blank" rel="noopener">${r.source}</a>`;
   else vs.textContent = r.source || '';
   const ings = (r.ingredients || '').trim().split('\n').filter(Boolean);
   document.getElementById('v-ingredients').innerHTML = ings.map(i => `<li>${i}</li>`).join('');
@@ -840,7 +837,7 @@ function openEdit(id) {
   document.getElementById('f-category').value = r.category || '';
   document.getElementById('f-occasion').value = r.occasion || '';
   document.getElementById('f-source').value = r.source || '';
-  srcType = r.sourceType || 'other';
+  srcType = r.sourcetype || 'other';
   document.getElementById('add-modal').classList.add('open');
 }
 
@@ -881,11 +878,11 @@ async function saveRecipe() {
     instructions: document.getElementById('f-instructions').value.trim(),
     season, category,
     occasion: occasion || '',
-    sourceType: srcType,
+    sourcetype: srcType,
     source: document.getElementById('f-source').value.trim(),
     made: editingId ? (recipes.find(r => r.id === editingId)?.made || false) : false,
     staples: editingId ? (recipes.find(r => r.id === editingId)?.staples || false) : false,
-    createdAt: editingId ? (recipes.find(r => r.id === editingId)?.createdAt || new Date().toISOString()) : new Date().toISOString()
+    createdat: editingId ? (recipes.find(r => r.id === editingId)?.createdat || new Date().toISOString()) : new Date().toISOString()
   };
 
   try {
