@@ -98,6 +98,9 @@
   .staples-btn.stapled { background: var(--gold-light); border-color: #d4b060; color: #6b5210; }
   .staples-btn:hover { border-color: #d4b060; color: #6b5210; }
 
+  .load-more-btn { display: block; width: 100%; margin-top: 1rem; padding: 0.7rem; font-family: var(--font-body); font-size: 0.85rem; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: var(--burgundy); cursor: pointer; transition: all 0.15s; }
+  .load-more-btn:hover { background: var(--mauve-light); border-color: var(--burgundy); }
+
   .empty-state { text-align: center; padding: 4rem 2rem; color: var(--burgundy); display: none; }
   .empty-state span { font-family: var(--font-display); font-size: 1.2rem; font-style: italic; display: block; margin-bottom: 0.5rem; color: var(--near-black); }
 
@@ -440,6 +443,8 @@ let editingId = null, viewingId = null, srcType = 'url';
 let deletedRecipe = null, deleteTimeout = null, toastTimeout = null;
 let filteredForView = [];
 let selectedSeasons = new Set();
+const PAGE_SIZE = 24;
+let visibleCount = PAGE_SIZE;
 
 // ─── Season picker ────────────────────────────────────────────────────────────
 function toggleSeason(s) {
@@ -638,7 +643,7 @@ function renderOccasionFilters() {
   group.innerHTML = `
     <div class="filter-drop-wrap" id="occ-drop-wrap">
       <button class="filter-drop-btn occ-btn${filterOccasion !== 'all' ? ' occ-active' : ''}" onclick="toggleDropdown('occ', event)">
-        <span id="occ-drop-label">${filterOccasion === 'all' ? 'Occasion' : filterOccasion}</span><span class="drop-arrow">▾</span>
+        <span id="occ-drop-label">${filterOccasion === 'all' ? '🎉' : filterOccasion}</span><span class="drop-arrow">▾</span>
       </button>
       <div class="dropdown-menu" id="occ-drop-menu">
         <div class="dropdown-opt${filterOccasion === 'all' ? ' selected' : ''}" data-occ="all">All occasions</div>
@@ -693,21 +698,22 @@ function getFiltered() {
       (filterOccasion === 'all' || (r.occasion || '').trim() === filterOccasion) &&
       (filterStatus === 'all' || (filterStatus === 'made' && r.made) || (filterStatus === 'unmade' && !r.made) || (filterStatus === 'staples' && r.staples)) &&
       (!q || r.name.toLowerCase().includes(q) || (r.ingredients || '').toLowerCase().includes(q));
-  });
+  }).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
 function render() {
   const grid = document.getElementById('recipe-grid'), empty = document.getElementById('empty-state');
   const filtered = getFiltered();
   const total = recipes.length;
-  document.getElementById('recipe-count').textContent = total === 0 ? 'No recipes yet' : `${total} recipe${total !== 1 ? 's' : ''}`;
+  const showing = Math.min(visibleCount, filtered.length);
+  document.getElementById('recipe-count').textContent = total === 0 ? 'No recipes yet' :
+    filtered.length < total ? `Showing ${showing} of ${filtered.length} (${total} total)` :
+    `${showing} of ${total} recipe${total !== 1 ? 's' : ''}`;
   renderOccasionFilters();
   if (!filtered.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  grid.innerHTML = filtered.map(r => {
-    let srcLabel = '';
-    if (r.sourceType === 'url' && r.source) { try { srcLabel = new URL(r.source).hostname.replace('www.',''); } catch { srcLabel = r.source; } }
-    else if (r.source) srcLabel = r.source;
+  const visible = filtered.slice(0, visibleCount);
+  grid.innerHTML = visible.map(r => {
     return `<div class="card" onclick="openView('${r.id}')">
       <div class="card-tags">
         ${(r.season||'').split(',').map(s=>s.trim()).filter(Boolean).map(s=>`<span class="tag tag-season">${s}</span>`).join('')}
@@ -723,6 +729,17 @@ function render() {
       </div>
     </div>`;
   }).join('');
+  // Load more button
+  const existing = document.getElementById('load-more-btn');
+  if (existing) existing.remove();
+  if (filtered.length > visibleCount) {
+    const btn = document.createElement('button');
+    btn.id = 'load-more-btn';
+    btn.className = 'load-more-btn';
+    btn.textContent = `Load more (${filtered.length - visibleCount} remaining)`;
+    btn.onclick = () => { visibleCount += PAGE_SIZE; render(); };
+    grid.after(btn);
+  }
 }
 
 // ─── View modal ───────────────────────────────────────────────────────────────
@@ -949,6 +966,7 @@ document.addEventListener('click', e => {
   if (!opt) return;
   filterOccasion = opt.dataset.occ;
   closeAllDropdowns();
+  visibleCount = PAGE_SIZE;
   renderOccasionFilters();
   render();
 });
@@ -959,7 +977,7 @@ document.getElementById('season-drop-menu').addEventListener('click', e => {
   document.getElementById('season-drop-label').textContent = opt.textContent;
   document.getElementById('season-drop-btn').classList.toggle('season-active', filterSeason !== 'all');
   document.querySelectorAll('#season-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === opt));
-  closeAllDropdowns(); render();
+  closeAllDropdowns(); visibleCount = PAGE_SIZE; render();
 });
 
 document.getElementById('cat-drop-menu').addEventListener('click', e => {
@@ -968,7 +986,7 @@ document.getElementById('cat-drop-menu').addEventListener('click', e => {
   document.getElementById('cat-drop-label').textContent = filterCat === 'all' ? 'All' : opt.textContent;
   document.getElementById('cat-drop-btn').classList.toggle('cat-active', filterCat !== 'all');
   document.querySelectorAll('#cat-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === opt));
-  closeAllDropdowns(); render();
+  closeAllDropdowns(); visibleCount = PAGE_SIZE; render();
 });
 
 document.getElementById('status-drop-menu').addEventListener('click', e => {
@@ -978,10 +996,10 @@ document.getElementById('status-drop-menu').addEventListener('click', e => {
   document.getElementById('status-drop-label').textContent = labels[filterStatus];
   document.getElementById('status-drop-btn').classList.toggle('status-active', filterStatus !== 'all');
   document.querySelectorAll('#status-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === opt));
-  closeAllDropdowns(); render();
+  closeAllDropdowns(); visibleCount = PAGE_SIZE; render();
 });
 
-document.getElementById('search-input').addEventListener('input', e => { searchQuery = e.target.value; render(); });
+document.getElementById('search-input').addEventListener('input', e => { searchQuery = e.target.value; visibleCount = PAGE_SIZE; render(); });
 
 loadRecipes();
 </script>
