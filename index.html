@@ -50,7 +50,7 @@
 
   .occasion-label { font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: #6b5210; white-space: nowrap; flex-shrink: 0; }
 
-  .search-input { font-family: var(--font-body); font-size: 0.85rem; padding: 0.42rem 0.9rem; border: 1px solid var(--border); border-radius: 20px; background: var(--warm-white); color: var(--near-black); transition: border-color 0.15s; }
+  .search-input { font-family: var(--font-body); font-size: 16px; padding: 0.42rem 0.9rem; border: 1px solid var(--border); border-radius: 20px; background: var(--warm-white); color: var(--near-black); transition: border-color 0.15s; }
   .search-input:focus { outline: none; border-color: var(--burgundy); }
   .import-input { display: none; }
 
@@ -114,7 +114,7 @@
 
   .form-group { margin-bottom: 1.1rem; }
   label { display: block; font-size: 0.78rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--burgundy); margin-bottom: 0.4rem; }
-  input[type=text], textarea, select { width: 100%; font-family: var(--font-body); font-size: 0.9rem; padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: var(--cream); color: var(--near-black); transition: border-color 0.15s; -webkit-appearance: none; appearance: none; }
+  input[type=text], textarea, select { width: 100%; font-family: var(--font-body); font-size: 16px; padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: var(--cream); color: var(--near-black); transition: border-color 0.15s; -webkit-appearance: none; appearance: none; }
   input[type=text]:focus, textarea:focus, select:focus { outline: none; border-color: var(--burgundy); }
   input.err, select.err { border-color: var(--burgundy); background: #fdf0f0; }
   textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
@@ -479,6 +479,59 @@ async function apiCall(params) {
   return r.json();
 }
 
+// ─── Session state persistence (search/filters/open recipe, 1h TTL) ───────────
+const SESSION_KEY = 'recipes-session-state';
+const SESSION_TTL = 60 * 60 * 1000; // 1 hour
+
+function saveSessionState() {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({
+    searchQuery, filterSeason, filterCat, filterOccasion, filterStatus, viewingId,
+    ts: Date.now()
+  }));
+}
+
+function loadSessionState() {
+  const raw = localStorage.getItem(SESSION_KEY);
+  if (!raw) return null;
+  try {
+    const s = JSON.parse(raw);
+    if (Date.now() - s.ts > SESSION_TTL) { localStorage.removeItem(SESSION_KEY); return null; }
+    return s;
+  } catch (e) { return null; }
+}
+
+function applySessionState() {
+  const s = loadSessionState();
+  if (!s) return null;
+  searchQuery = s.searchQuery || '';
+  filterSeason = s.filterSeason || 'all';
+  filterCat = s.filterCat || 'all';
+  filterOccasion = s.filterOccasion || 'all';
+  filterStatus = s.filterStatus || 'all';
+
+  document.getElementById('search-input').value = searchQuery;
+
+  const seasonOpt = document.querySelector(`#season-drop-menu [data-season="${filterSeason}"]`);
+  if (seasonOpt) {
+    document.getElementById('season-drop-label').textContent = seasonOpt.textContent;
+    document.getElementById('season-drop-btn').classList.toggle('season-active', filterSeason !== 'all');
+    document.querySelectorAll('#season-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === seasonOpt));
+  }
+  const catOpt = document.querySelector(`#cat-drop-menu [data-cat="${filterCat}"]`);
+  if (catOpt) {
+    document.getElementById('cat-drop-label').textContent = filterCat === 'all' ? 'All' : catOpt.textContent;
+    document.getElementById('cat-drop-btn').classList.toggle('cat-active', filterCat !== 'all');
+    document.querySelectorAll('#cat-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === catOpt));
+  }
+  const statusLabels = { all: 'Status', made: '✓ Made', unmade: '○ Unmade', staples: '★ Staples' };
+  document.getElementById('status-drop-label').textContent = statusLabels[filterStatus];
+  document.getElementById('status-drop-btn').classList.toggle('status-active', filterStatus !== 'all');
+  const statusOpt = document.querySelector(`#status-drop-menu [data-status="${filterStatus}"]`);
+  document.querySelectorAll('#status-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === statusOpt));
+
+  return s.viewingId || null;
+}
+
 async function loadRecipes() {
   setStatus('Loading recipes...', false);
   try {
@@ -489,8 +542,10 @@ async function loadRecipes() {
       staples: r.staples === true || r.staples === 'TRUE'
     }));
     clearStatus();
+    const savedViewingId = applySessionState();
     render();
     checkBackup();
+    if (savedViewingId && recipes.some(r => r.id === savedViewingId)) openView(savedViewingId);
   } catch (e) {
     clearStatus();
     setStatus('Could not load. Check your Apps Script URL in the config.', true);
@@ -752,6 +807,7 @@ function openView(id) {
   viewingId = id;
   populateView(id);
   document.getElementById('view-modal').classList.add('open');
+  saveSessionState();
 }
 
 function populateView(id) {
@@ -791,19 +847,26 @@ function navigateView(dir) {
   const newIdx = idx + dir;
   if (newIdx < 0 || newIdx >= filteredForView.length) return;
   populateView(filteredForView[newIdx].id);
+  saveSessionState();
 }
 
-function closeView() { document.getElementById('view-modal').classList.remove('open'); viewingId = null; }
+function closeView() { document.getElementById('view-modal').classList.remove('open'); viewingId = null; saveSessionState(); }
 function editFromView() { const id = viewingId; closeView(); openEdit(id); }
 
 // Touch swipe on view modal
 (function() {
-  let tx = 0;
+  let tx = 0, ty = 0;
   const modal = document.getElementById('view-modal');
-  modal.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  modal.addEventListener('touchstart', e => {
+    tx = e.touches[0].clientX;
+    ty = e.touches[0].clientY;
+  }, { passive: true });
   modal.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - tx;
-    if (Math.abs(dx) > 50) navigateView(dx < 0 ? 1 : -1);
+    const dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      navigateView(dx < 0 ? 1 : -1);
+    }
   }, { passive: true });
 })();
 
@@ -973,6 +1036,7 @@ document.addEventListener('click', e => {
   visibleCount = PAGE_SIZE;
   renderOccasionFilters();
   render();
+  saveSessionState();
 });
 
 document.getElementById('season-drop-menu').addEventListener('click', e => {
@@ -981,7 +1045,7 @@ document.getElementById('season-drop-menu').addEventListener('click', e => {
   document.getElementById('season-drop-label').textContent = opt.textContent;
   document.getElementById('season-drop-btn').classList.toggle('season-active', filterSeason !== 'all');
   document.querySelectorAll('#season-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === opt));
-  closeAllDropdowns(); visibleCount = PAGE_SIZE; render();
+  closeAllDropdowns(); visibleCount = PAGE_SIZE; render(); saveSessionState();
 });
 
 document.getElementById('cat-drop-menu').addEventListener('click', e => {
@@ -990,7 +1054,7 @@ document.getElementById('cat-drop-menu').addEventListener('click', e => {
   document.getElementById('cat-drop-label').textContent = filterCat === 'all' ? 'All' : opt.textContent;
   document.getElementById('cat-drop-btn').classList.toggle('cat-active', filterCat !== 'all');
   document.querySelectorAll('#cat-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === opt));
-  closeAllDropdowns(); visibleCount = PAGE_SIZE; render();
+  closeAllDropdowns(); visibleCount = PAGE_SIZE; render(); saveSessionState();
 });
 
 document.getElementById('status-drop-menu').addEventListener('click', e => {
@@ -1000,10 +1064,10 @@ document.getElementById('status-drop-menu').addEventListener('click', e => {
   document.getElementById('status-drop-label').textContent = labels[filterStatus];
   document.getElementById('status-drop-btn').classList.toggle('status-active', filterStatus !== 'all');
   document.querySelectorAll('#status-drop-menu .dropdown-opt').forEach(o => o.classList.toggle('selected', o === opt));
-  closeAllDropdowns(); visibleCount = PAGE_SIZE; render();
+  closeAllDropdowns(); visibleCount = PAGE_SIZE; render(); saveSessionState();
 });
 
-document.getElementById('search-input').addEventListener('input', e => { searchQuery = e.target.value; visibleCount = PAGE_SIZE; render(); });
+document.getElementById('search-input').addEventListener('input', e => { searchQuery = e.target.value; visibleCount = PAGE_SIZE; render(); saveSessionState(); });
 
 loadRecipes();
 </script>
