@@ -259,12 +259,13 @@
         <div class="dropdown-opt selected" data-cat="all">All</div>
         <div class="dropdown-opt" data-cat="Breakfast">Breakfast</div>
         <div class="dropdown-opt" data-cat="Lunch">Lunch</div>
-        <div class="dropdown-opt" data-cat="Dinner">Dinner</div>
         <div class="dropdown-opt" data-cat="Snack">Snack</div>
+        <div class="dropdown-opt" data-cat="M+R">M+R</div>
+        <div class="dropdown-opt" data-cat="Dinner">Dinner</div>
         <div class="dropdown-opt" data-cat="Dessert">Dessert</div>
         <div class="dropdown-opt" data-cat="Drinks">Drinks</div>
         <div class="dropdown-opt" data-cat="Apéro">Apéro</div>
-        <div class="dropdown-opt" data-cat="M+R">M+R</div>
+        <div class="dropdown-opt" data-cat="Bread">Bread</div>
       </div>
     </div>
     <div id="occasion-filter-group"></div>
@@ -326,8 +327,15 @@
         <label>Category</label>
         <select id="f-category">
           <option value="">Select...</option>
-          <option>Breakfast</option><option>Lunch</option><option>Dinner</option>
-          <option>Snack</option><option>Dessert</option><option>Drinks</option><option>Apéro</option><option>M+R</option>
+          <option>Breakfast</option>
+          <option>Lunch</option>
+          <option>Snack</option>
+          <option>M+R</option>
+          <option>Dinner</option>
+          <option>Dessert</option>
+          <option>Drinks</option>
+          <option>Apéro</option>
+          <option>Bread</option>
         </select>
       </div>
     </div>
@@ -588,7 +596,7 @@ function importBackup(e) {
       // Assign fresh IDs and skip true duplicates (same name)
       const newRecipes = imp
         .filter(r => !existingNames.has(r.name.trim().toLowerCase()))
-        .map((r, i) => ({ ...r, id: (Date.now() + i * 1000).toString() }));
+        .map((r, i) => ({ ...r, id: (Date.now() + i * 1000).toString(), createdat: r.createdat || new Date().toISOString() }));
       if (!newRecipes.length) { showToast('All recipes in that file already exist.', false); return; }
       recipes = [...newRecipes, ...recipes];
       render();
