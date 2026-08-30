@@ -232,14 +232,16 @@
 
   <div class="top-bar">
     <input class="search-input" type="text" id="search-input" placeholder="Search...">
-    <button class="add-btn" onclick="openAdd()">+ Add</button>
-    <button class="tool-btn-icon" style="font-size: 0.65rem;" onclick="exportBackup()" title="Export">&#8673; Export</button>
-    <button class="tool-btn-icon" style="font-size: 0.65rem;" onclick="toggleImportMenu(event)" title="Import">&#8673; Import</button>
-    <div id="import-menu" class="dropdown-menu" style="display: none; position: absolute; top: 3.2rem; right: 1.5rem; z-index: 1000; min-width: 140px;">
-      <div style="padding: 0.5rem 0;">
-        <button onclick="switchToFileUpload()" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.8rem; border: none; background: transparent; cursor: pointer; font-size: 0.8rem; font-family: var(--font-body); transition: background 0.1s;">Upload File</button>
-        <button onclick="switchToPaste()" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.8rem; border: none; background: transparent; cursor: pointer; font-size: 0.8rem; font-family: var(--font-body); transition: background 0.1s;">Paste JSON</button>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <button class="add-btn" onclick="toggleAddMenu(event)">+ Add</button>
+      <div id="add-menu" class="dropdown-menu" style="display: none; position: absolute; top: 3.2rem; left: 0; z-index: 1000; min-width: 140px; background: var(--warm-white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <div style="padding: 0.5rem 0;">
+          <button onclick="closeAddMenu(); openAdd()" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.8rem; border: none; background: transparent; cursor: pointer; font-size: 0.8rem; font-family: var(--font-body); transition: background 0.1s; color: var(--burgundy);">Fill in form</button>
+          <button onclick="switchToFileUpload()" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.8rem; border: none; background: transparent; cursor: pointer; font-size: 0.8rem; font-family: var(--font-body); transition: background 0.1s; color: var(--burgundy);">Upload JSON</button>
+          <button onclick="switchToPaste()" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.8rem; border: none; background: transparent; cursor: pointer; font-size: 0.8rem; font-family: var(--font-body); transition: background 0.1s; color: var(--burgundy);">Paste JSON</button>
+        </div>
       </div>
+      <button class="tool-btn-icon" style="font-size: 0.6rem; padding: 0.2rem 0.5rem; margin-left: auto;" onclick="exportBackup()" title="Export">&#8673; Export</button>
     </div>
     <input type="file" id="import-input" class="import-input" accept=".json" onchange="importBackup(event)">
   </div>
@@ -596,20 +598,24 @@ function exportBackup() {
   showToast('Backup exported!', false);
 }
 
-function toggleImportMenu(e) {
-  const menu = document.getElementById('import-menu');
+function toggleAddMenu(e) {
+  const menu = document.getElementById('add-menu');
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
   e.stopPropagation();
 }
 
+function closeAddMenu() {
+  document.getElementById('add-menu').style.display = 'none';
+}
+
 function switchToFileUpload() {
-  document.getElementById('import-menu').style.display = 'none';
+  closeAddMenu();
   document.getElementById('import-paste').style.display = 'none';
   document.getElementById('import-input').click();
 }
 
 function switchToPaste() {
-  document.getElementById('import-menu').style.display = 'none';
+  closeAddMenu();
   const pasteArea = document.getElementById('import-paste');
   pasteArea.style.display = 'block';
   document.getElementById('paste-actions').style.display = 'flex';
@@ -1082,10 +1088,9 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('click', e => {
-  const importBtn = document.querySelector('[onclick*="toggleImportMenu"]');
-  const importMenu = document.getElementById('import-menu');
-  if (importMenu && !e.target.closest('#import-menu') && !e.target.closest('[onclick*="toggleImportMenu"]')) {
-    importMenu.style.display = 'none';
+  const addMenu = document.getElementById('add-menu');
+  if (addMenu && !e.target.closest('#add-menu') && !e.target.closest('[onclick*="toggleAddMenu"]')) {
+    addMenu.style.display = 'none';
   }
 });
 
