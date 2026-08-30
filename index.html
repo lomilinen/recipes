@@ -53,7 +53,6 @@
   .search-input { font-family: var(--font-body); font-size: 16px; padding: 0.42rem 0.9rem; border: 1px solid var(--border); border-radius: 20px; background: var(--warm-white); color: var(--near-black); transition: border-color 0.15s; }
   .search-input:focus { outline: none; border-color: var(--burgundy); }
   .import-input { display: none; }
-  .import-mode-btn.active { background: var(--burgundy); color: #fff; }
 
   .status-bar { display: none; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--forest); margin-bottom: 1rem; padding: 0.5rem 0.8rem; background: var(--sage-light); border-radius: 8px; }
   .status-bar.show { display: flex; }
@@ -234,16 +233,20 @@
   <div class="top-bar">
     <input class="search-input" type="text" id="search-input" placeholder="Search...">
     <button class="add-btn" onclick="openAdd()">+ Add</button>
-    <button class="tool-btn-icon" onclick="exportBackup()" title="Export">&#8675; Export</button>
-    <div id="import-section" style="display: flex; gap: 0.5rem; align-items: center;">
-      <div style="display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--border); border-radius: 20px; padding: 0.25rem 0.5rem; background: var(--warm-white);">
-        <button class="import-mode-btn active" data-mode="file" onclick="switchImportMode('file')" style="padding: 0.3rem 0.6rem; border: none; background: transparent; cursor: pointer; font-size: 0.75rem; font-weight: 500; border-radius: 4px; transition: all 0.15s;">Upload File</button>
-        <button class="import-mode-btn" data-mode="paste" onclick="switchImportMode('paste')" style="padding: 0.3rem 0.6rem; border: none; background: transparent; cursor: pointer; font-size: 0.75rem; font-weight: 500; border-radius: 4px; transition: all 0.15s;">Paste JSON</button>
+    <button class="tool-btn-icon" style="font-size: 0.65rem;" onclick="exportBackup()" title="Export">&#8673; Export</button>
+    <button class="tool-btn-icon" style="font-size: 0.65rem;" onclick="toggleImportMenu(event)" title="Import">&#8673; Import</button>
+    <div id="import-menu" class="dropdown-menu" style="display: none; position: absolute; top: 3.2rem; right: 1.5rem; z-index: 1000; min-width: 140px;">
+      <div style="padding: 0.5rem 0;">
+        <button onclick="switchToFileUpload()" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.8rem; border: none; background: transparent; cursor: pointer; font-size: 0.8rem; font-family: var(--font-body); transition: background 0.1s;">Upload File</button>
+        <button onclick="switchToPaste()" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.8rem; border: none; background: transparent; cursor: pointer; font-size: 0.8rem; font-family: var(--font-body); transition: background 0.1s;">Paste JSON</button>
       </div>
-      <button class="tool-btn-icon" onclick="handleImport()" title="Import">&#8673; Import</button>
     </div>
     <input type="file" id="import-input" class="import-input" accept=".json" onchange="importBackup(event)">
-    <textarea id="import-paste" class="import-input" style="display: none; width: 100%; min-height: 150px; padding: 0.75rem; margin-top: 0.5rem; border: 1px solid var(--border); border-radius: 8px; font-family: monospace; font-size: 0.85rem; resize: vertical;" placeholder="Paste your exported JSON here..."></textarea>
+  </div>
+  <textarea id="import-paste" style="display: none; width: 100%; min-height: 120px; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-family: monospace; font-size: 0.8rem; resize: vertical;" placeholder="Paste your exported JSON here..."></textarea>
+  <div id="paste-actions" style="display: none; gap: 0.5rem; margin-bottom: 0.75rem;">
+    <button class="add-btn" onclick="handleImportPaste()" style="font-size: 0.8rem;">Import Pasted</button>
+    <button class="tool-btn-icon" onclick="document.getElementById('import-paste').style.display='none'; document.getElementById('paste-actions').style.display='none';" style="font-size: 0.75rem;">Cancel</button>
   </div>
 
   <div class="filter-bar">
@@ -593,39 +596,32 @@ function exportBackup() {
   showToast('Backup exported!', false);
 }
 
-function switchImportMode(mode) {
-  const fileInput = document.getElementById('import-input');
-  const pasteArea = document.getElementById('import-paste');
-  const fileModeBtn = document.querySelector('[data-mode="file"]');
-  const pasteModeBtn = document.querySelector('[data-mode="paste"]');
-  
-  if (mode === 'file') {
-    fileInput.style.display = 'none';
-    pasteArea.style.display = 'none';
-    fileModeBtn.classList.add('active');
-    pasteModeBtn.classList.remove('active');
-  } else {
-    fileInput.style.display = 'none';
-    pasteArea.style.display = 'block';
-    fileModeBtn.classList.remove('active');
-    pasteModeBtn.classList.add('active');
-    pasteArea.focus();
-  }
+function toggleImportMenu(e) {
+  const menu = document.getElementById('import-menu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  e.stopPropagation();
 }
 
-function handleImport() {
-  const fileInput = document.getElementById('import-input');
+function switchToFileUpload() {
+  document.getElementById('import-menu').style.display = 'none';
+  document.getElementById('import-paste').style.display = 'none';
+  document.getElementById('import-input').click();
+}
+
+function switchToPaste() {
+  document.getElementById('import-menu').style.display = 'none';
   const pasteArea = document.getElementById('import-paste');
-  const mode = document.querySelector('.import-mode-btn.active').dataset.mode;
-  
-  if (mode === 'file') {
-    fileInput.click();
-  } else {
-    const json = pasteArea.value.trim();
-    if (!json) { showToast('Paste JSON before importing.', false); return; }
-    processImport(json);
-    pasteArea.value = '';
-  }
+  pasteArea.style.display = 'block';
+  document.getElementById('paste-actions').style.display = 'flex';
+  pasteArea.focus();
+}
+
+function handleImportPaste() {
+  const json = document.getElementById('import-paste').value.trim();
+  if (!json) { showToast('Paste JSON before importing.', false); return; }
+  processImport(json);
+  document.getElementById('import-paste').value = '';
+  document.getElementById('import-paste').style.display = 'none';
 }
 
 function processImport(jsonString) {
@@ -1083,6 +1079,14 @@ function closeAllDropdowns() {
 }
 document.addEventListener('click', e => {
   if (!e.target.closest('.filter-drop-wrap')) closeAllDropdowns();
+});
+
+document.addEventListener('click', e => {
+  const importBtn = document.querySelector('[onclick*="toggleImportMenu"]');
+  const importMenu = document.getElementById('import-menu');
+  if (importMenu && !e.target.closest('#import-menu') && !e.target.closest('[onclick*="toggleImportMenu"]')) {
+    importMenu.style.display = 'none';
+  }
 });
 
 document.addEventListener('click', e => {
