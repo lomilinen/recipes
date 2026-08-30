@@ -53,6 +53,7 @@
   .search-input { font-family: var(--font-body); font-size: 16px; padding: 0.42rem 0.9rem; border: 1px solid var(--border); border-radius: 20px; background: var(--warm-white); color: var(--near-black); transition: border-color 0.15s; }
   .search-input:focus { outline: none; border-color: var(--burgundy); }
   .import-input { display: none; }
+  .import-mode-btn.active { background: var(--burgundy); color: #fff; }
 
   .status-bar { display: none; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--forest); margin-bottom: 1rem; padding: 0.5rem 0.8rem; background: var(--sage-light); border-radius: 8px; }
   .status-bar.show { display: flex; }
@@ -234,8 +235,15 @@
     <input class="search-input" type="text" id="search-input" placeholder="Search...">
     <button class="add-btn" onclick="openAdd()">+ Add</button>
     <button class="tool-btn-icon" onclick="exportBackup()" title="Export">&#8675; Export</button>
-    <button class="tool-btn-icon" onclick="document.getElementById('import-input').click()" title="Import">&#8673; Import</button>
+    <div id="import-section" style="display: flex; gap: 0.5rem; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--border); border-radius: 20px; padding: 0.25rem 0.5rem; background: var(--warm-white);">
+        <button class="import-mode-btn active" data-mode="file" onclick="switchImportMode('file')" style="padding: 0.3rem 0.6rem; border: none; background: transparent; cursor: pointer; font-size: 0.75rem; font-weight: 500; border-radius: 4px; transition: all 0.15s;">Upload File</button>
+        <button class="import-mode-btn" data-mode="paste" onclick="switchImportMode('paste')" style="padding: 0.3rem 0.6rem; border: none; background: transparent; cursor: pointer; font-size: 0.75rem; font-weight: 500; border-radius: 4px; transition: all 0.15s;">Paste JSON</button>
+      </div>
+      <button class="tool-btn-icon" onclick="handleImport()" title="Import">&#8673; Import</button>
+    </div>
     <input type="file" id="import-input" class="import-input" accept=".json" onchange="importBackup(event)">
+    <textarea id="import-paste" class="import-input" style="display: none; width: 100%; min-height: 150px; padding: 0.75rem; margin-top: 0.5rem; border: 1px solid var(--border); border-radius: 8px; font-family: monospace; font-size: 0.85rem; resize: vertical;" placeholder="Paste your exported JSON here..."></textarea>
   </div>
 
   <div class="filter-bar">
@@ -585,27 +593,68 @@ function exportBackup() {
   showToast('Backup exported!', false);
 }
 
+function switchImportMode(mode) {
+  const fileInput = document.getElementById('import-input');
+  const pasteArea = document.getElementById('import-paste');
+  const fileModeBtn = document.querySelector('[data-mode="file"]');
+  const pasteModeBtn = document.querySelector('[data-mode="paste"]');
+  
+  if (mode === 'file') {
+    fileInput.style.display = 'none';
+    pasteArea.style.display = 'none';
+    fileModeBtn.classList.add('active');
+    pasteModeBtn.classList.remove('active');
+  } else {
+    fileInput.style.display = 'none';
+    pasteArea.style.display = 'block';
+    fileModeBtn.classList.remove('active');
+    pasteModeBtn.classList.add('active');
+    pasteArea.focus();
+  }
+}
+
+function handleImport() {
+  const fileInput = document.getElementById('import-input');
+  const pasteArea = document.getElementById('import-paste');
+  const mode = document.querySelector('.import-mode-btn.active').dataset.mode;
+  
+  if (mode === 'file') {
+    fileInput.click();
+  } else {
+    const json = pasteArea.value.trim();
+    if (!json) { showToast('Paste JSON before importing.', false); return; }
+    processImport(json);
+    pasteArea.value = '';
+  }
+}
+
+function processImport(jsonString) {
+  try {
+    const d = JSON.parse(jsonString);
+    const imp = d.recipes || d;
+    if (!Array.isArray(imp)) throw new Error('Invalid');
+    const existingNames = new Set(recipes.map(r => r.name.trim().toLowerCase()));
+    const newRecipes = imp
+      .filter(r => !existingNames.has(r.name.trim().toLowerCase()))
+      .map((r, i) => ({ ...r, id: (Date.now() + i * 1000).toString(), createdat: r.createdat || new Date().toISOString() }));
+    if (!newRecipes.length) { showToast('All recipes in that file already exist.', false); return; }
+    recipes = [...newRecipes, ...recipes];
+    render();
+    startReview(newRecipes);
+    saveImportedToSheet(newRecipes);
+  } catch { showToast('Could not read that JSON.', false); }
+}
+
+
 function importBackup(e) {
   const f = e.target.files[0]; if (!f) return;
   const reader = new FileReader();
   reader.onload = async ev => {
-    try {
-      const d = JSON.parse(ev.target.result), imp = d.recipes || d;
-      if (!Array.isArray(imp)) throw new Error('Invalid');
-      const existingNames = new Set(recipes.map(r => r.name.trim().toLowerCase()));
-      // Assign fresh IDs and skip true duplicates (same name)
-      const newRecipes = imp
-        .filter(r => !existingNames.has(r.name.trim().toLowerCase()))
-        .map((r, i) => ({ ...r, id: (Date.now() + i * 1000).toString(), createdat: r.createdat || new Date().toISOString() }));
-      if (!newRecipes.length) { showToast('All recipes in that file already exist.', false); return; }
-      recipes = [...newRecipes, ...recipes];
-      render();
-      startReview(newRecipes);
-      saveImportedToSheet(newRecipes);
-    } catch { showToast('Could not read that file.', false); }
+    processImport(ev.target.result);
   };
   reader.readAsText(f); e.target.value = '';
 }
+
 
 async function saveImportedToSheet(newRecipes) {
   setStatus(`Saving ${newRecipes.length} recipe${newRecipes.length !== 1 ? 's' : ''} to your Sheet...`, false);
