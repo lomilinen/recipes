@@ -673,7 +673,9 @@ async function saveImportedToSheet(newRecipes) {
   let saved = 0, failed = 0;
   for (const recipe of newRecipes) {
     try {
-      await apiCall({ action: 'saveRecipe', data: recipe });
+      const recipeForSheet = { ...recipe };
+      delete recipeForSheet.photo;
+      await apiCall({ action: 'saveRecipe', data: recipeForSheet });
       saved++;
       setStatus(`Saving to Sheet... ${saved} of ${newRecipes.length} done`, false);
     } catch (e) {
@@ -1068,7 +1070,9 @@ async function saveRecipe() {
 
   try {
     setStatus(editingId ? 'Updating recipe...' : 'Saving recipe...', false);
-    await apiCall({ action: editingId ? 'updateRecipe' : 'saveRecipe', data: recipe });
+    const recipeForSheet = { ...recipe };
+    delete recipeForSheet.photo;
+    await apiCall({ action: editingId ? 'updateRecipe' : 'saveRecipe', data: recipeForSheet });
     if (editingId) { const idx = recipes.findIndex(r => r.id === editingId); if (idx > -1) recipes[idx] = recipe; }
     else recipes.unshift(recipe);
     clearStatus(); closeAdd(); render();
