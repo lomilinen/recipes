@@ -1035,6 +1035,7 @@ async function saveRecipe() {
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   const occasion = document.getElementById('f-occasion').value.trim();
+  const rawPhotoUrl = document.getElementById('f-photo-url').value.trim();
   const recipe = {
     id: editingId || Date.now().toString(),
     name,
@@ -1047,7 +1048,7 @@ async function saveRecipe() {
     made: editingId ? (recipes.find(r => r.id === editingId)?.made || false) : false,
     staples: editingId ? (recipes.find(r => r.id === editingId)?.staples || false) : false,
     createdat: editingId ? (recipes.find(r => r.id === editingId)?.createdat || new Date().toISOString()) : new Date().toISOString(),
-    photourl: toDirectUrl(document.getElementById('f-photo-url').value) || (editingId ? (recipes.find(r => r.id === editingId)?.photourl || '') : '')
+    photourl: rawPhotoUrl ? (toDirectUrl(rawPhotoUrl) || '') : ''
   };
 
   try {
