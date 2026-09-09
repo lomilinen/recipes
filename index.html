@@ -981,8 +981,26 @@ function openEdit(id) {
 
 let currentFormPhotoUrl = null;
 
+function toDirectUrl(url){
+  if(!url||!url.trim())return null;
+  url=url.trim();
+  if(url.includes('drive.google.com')){
+    const m=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if(m)return`https://lh3.googleusercontent.com/d/${m[1]}`;
+    return null;
+  }
+  if(url.includes('dropbox.com')||url.includes('dropboxusercontent.com')){
+    url=url.replace('www.dropbox.com','dl.dropboxusercontent.com');
+    url=url.replace(/[?&]st=[^&]*/g,'').replace(/[?&]dl=\d/g,'');
+    url=url.replace(/\?&/,'?').replace(/[?&]$/,'');
+    return url;
+  }
+  return url;
+}
+
 function handlePhotoUrlChange() {
-  currentFormPhotoUrl = document.getElementById('f-photo-url').value.trim() || null;
+  const pasted = document.getElementById('f-photo-url').value.trim();
+  currentFormPhotoUrl = toDirectUrl(pasted) || null;
 }
 
 function resetForm() {
@@ -1029,7 +1047,7 @@ async function saveRecipe() {
     made: editingId ? (recipes.find(r => r.id === editingId)?.made || false) : false,
     staples: editingId ? (recipes.find(r => r.id === editingId)?.staples || false) : false,
     createdat: editingId ? (recipes.find(r => r.id === editingId)?.createdat || new Date().toISOString()) : new Date().toISOString(),
-    photourl: currentFormPhotoUrl || (editingId ? (recipes.find(r => r.id === editingId)?.photourl || '') : '')
+    photourl: toDirectUrl(document.getElementById('f-photo-url').value) || (editingId ? (recipes.find(r => r.id === editingId)?.photourl || '') : '')
   };
 
   try {
