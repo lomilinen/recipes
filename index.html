@@ -820,7 +820,7 @@ function getFiltered() {
       (filterCat === 'all' || r.category === filterCat) &&
       (filterOccasion === 'all' || (r.occasion || '').trim() === filterOccasion) &&
       (filterStatus === 'all' || (filterStatus === 'made' && r.made) || (filterStatus === 'unmade' && !r.made) || (filterStatus === 'staples' && r.staples)) &&
-      (!q || r.name.toLowerCase().includes(q) || (r.ingredients || '').toLowerCase().includes(q));
+      (!q || r.name.toLowerCase().includes(q) || (r.ingredients || '').toLowerCase().includes(q) || (r.instructions || '').toLowerCase().includes(q) || (r.source || '').toLowerCase().includes(q));
   }).sort((a, b) => new Date(b.createdat || 0) - new Date(a.createdat || 0));
 }
 
