@@ -1176,6 +1176,7 @@ function checkPassword() {
   if (input === correct) {
     sessionStorage.setItem('recipe-authenticated', 'true');
     document.getElementById('password-modal').classList.add('hidden');
+    loadRecipes();
   } else {
     document.getElementById('password-error').textContent = 'Incorrect password';
     document.getElementById('password-input').value = '';
@@ -1185,6 +1186,7 @@ function checkPassword() {
 function initializeAuth() {
   if (sessionStorage.getItem('recipe-authenticated') === 'true') {
     document.getElementById('password-modal').classList.add('hidden');
+    loadRecipes();
   } else {
     document.getElementById('password-modal').classList.remove('hidden');
     document.getElementById('password-input').focus();
@@ -1225,7 +1227,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('search-input').addEventListener('input', e => { searchQuery = e.target.value; visibleCount = PAGE_SIZE; render(); saveSessionState(); });
   
-  loadRecipes();
 });
 </script>
 </body>
