@@ -749,18 +749,21 @@ function reviewNext() {
 
 function reviewEdit() {
   const r = reviewQueue[reviewIndex];
+  resetZoom();
   document.getElementById('review-modal').classList.remove('open');
   window._reviewPendingReopen = true;
   openEdit(r.id);
 }
 
 function reviewDone() {
+  resetZoom();
   document.getElementById('review-modal').classList.remove('open');
   showToast(`${reviewQueue.length} recipe${reviewQueue.length !== 1 ? 's' : ''} imported and reviewed!`, false);
   reviewQueue = [];
 }
 
 function closeAdd() {
+  resetZoom();
   document.getElementById('add-modal').classList.remove('open');
   editingId = null;
   if (window._reviewPendingReopen && reviewQueue.length) {
@@ -1168,6 +1171,10 @@ document.addEventListener('click', e => {
   saveSessionState();
 });
 
+
+function resetZoom() {
+  document.body.style.zoom = '100%';
+}
 
 function checkPassword() {
   const input = document.getElementById('password-input').value;
