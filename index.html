@@ -253,7 +253,7 @@
     <input class="search-input" type="text" id="search-input" placeholder="Search...">
     <div style="display: flex; gap: 0.5rem; align-items: center;">
       <button class="add-btn" onclick="toggleAddMenu(event)">+ Add</button>
-      <div id="add-menu" class="dropdown-menu" style="display: none; position: absolute; top: 3.2rem; left: 0; z-index: 1000; min-width: 140px; background: var(--warm-white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <div id="add-menu" class="dropdown-menu" style="display: none; position: fixed; z-index: 1000; min-width: 140px; background: var(--warm-white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         <div style="padding: 0.5rem 0;">
           <button onclick="closeAddMenu(); openAdd()" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.8rem; border: none; background: transparent; cursor: pointer; font-size: 0.8rem; font-family: var(--font-body); transition: background 0.1s; color: var(--burgundy);">Fill in form</button>
           <button onclick="switchToFileUpload()" style="display: block; width: 100%; text-align: left; padding: 0.4rem 0.8rem; border: none; background: transparent; cursor: pointer; font-size: 0.8rem; font-family: var(--font-body); transition: background 0.1s; color: var(--burgundy);">Upload JSON</button>
@@ -624,7 +624,16 @@ function exportBackup() {
 
 function toggleAddMenu(e) {
   const menu = document.getElementById('add-menu');
-  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  const btn = e.currentTarget;
+  if (menu.style.display === 'none') {
+    menu.style.display = 'block';
+    const btnRect = btn.getBoundingClientRect();
+    menu.style.position = 'fixed';
+    menu.style.top = (btnRect.bottom + 5) + 'px';
+    menu.style.left = btnRect.left + 'px';
+  } else {
+    menu.style.display = 'none';
+  }
   e.stopPropagation();
 }
 
