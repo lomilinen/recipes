@@ -231,7 +231,7 @@
 <div class="password-modal" id="password-modal">
   <div class="password-form">
     <h2>My Recipes</h2>
-    <input type="password" id="password-input" placeholder="Enter password" onkeypress="event.key === 'Enter' && checkPassword()">
+    <input type="password" id="password-input" placeholder="Enter password" onkeypress="event.key === 'Enter' && checkPassword()" style="font-size: 16px;">
     <button onclick="checkPassword()">Unlock</button>
     <div class="password-error" id="password-error"></div>
   </div>
@@ -250,7 +250,7 @@
   </header>
 
   <div class="top-bar">
-    <input class="search-input" type="text" id="search-input" placeholder="Search...">
+    <input class="search-input" type="text" id="search-input" placeholder="Search..." style="font-size: 16px;">
     <div style="display: flex; gap: 0.5rem; align-items: center;">
       <button class="add-btn" onclick="toggleAddMenu(event)">+ Add</button>
       <div id="add-menu" class="dropdown-menu" style="display: none; position: fixed; z-index: 1000; min-width: 140px; background: var(--warm-white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -264,7 +264,7 @@
     </div>
     <input type="file" id="import-input" class="import-input" accept=".json" onchange="importBackup(event)">
   </div>
-  <textarea id="import-paste" style="display: none; width: 100%; min-height: 120px; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-family: monospace; font-size: 0.8rem; resize: vertical;" placeholder="Paste your exported JSON here..."></textarea>
+  <textarea id="import-paste" style="display: none; width: 100%; min-height: 120px; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-family: monospace; font-size: 16px; resize: vertical;" placeholder="Paste your exported JSON here..."></textarea>
   <div id="paste-actions" style="display: none; gap: 0.5rem; margin-bottom: 0.75rem;">
     <button class="add-btn" onclick="handleImportPaste()" style="font-size: 0.8rem;">Import Pasted</button>
     <button class="tool-btn-icon" onclick="document.getElementById('import-paste').style.display='none'; document.getElementById('paste-actions').style.display='none';" style="font-size: 0.75rem;">Cancel</button>
@@ -334,15 +334,15 @@
 
     <div class="form-group">
       <label>Recipe name</label>
-      <input type="text" id="f-name" placeholder="e.g. Lemon Ricotta Pancakes">
+      <input type="text" id="f-name" placeholder="e.g. Lemon Ricotta Pancakes" style="font-size: 16px;">
     </div>
     <div class="form-group">
       <label>Ingredients <span style="font-weight:300;text-transform:none;letter-spacing:0">(one per line)</span></label>
-      <textarea id="f-ingredients" placeholder="2 cups flour&#10;1 tsp salt&#10;..."></textarea>
+      <textarea id="f-ingredients" placeholder="2 cups flour&#10;1 tsp salt&#10;..." style="font-size: 16px;"></textarea>
     </div>
     <div class="form-group">
       <label>Instructions</label>
-      <textarea id="f-instructions" style="min-height:120px" placeholder="Step by step method..."></textarea>
+      <textarea id="f-instructions" style="min-height:120px; font-size: 16px;" placeholder="Step by step method..."></textarea>
     </div>
     <div class="row-2">
       <div class="form-group">
@@ -357,7 +357,7 @@
       </div>
       <div class="form-group">
         <label>Category</label>
-        <select id="f-category">
+        <select id="f-category" style="font-size: 16px;">
           <option value="">Select...</option>
           <option>Breakfast</option>
           <option>Lunch</option>
@@ -374,7 +374,7 @@
     <div class="form-group">
       <label>Occasion <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
       <div class="occasion-input-wrap">
-        <input type="text" id="f-occasion" placeholder="e.g. Easter, Thanksgiving, Girls Dinner..." autocomplete="off"
+        <input type="text" id="f-occasion" placeholder="e.g. Easter, Thanksgiving, Girls Dinner..." autocomplete="off" style="font-size: 16px;"
           oninput="filterOccasionDropdown()" onfocus="openOccasionDropdown()" onblur="scheduleCloseOccasionDropdown()">
         <div class="occasion-dropdown" id="occasion-dropdown"></div>
       </div>
@@ -386,11 +386,11 @@
         <button class="src-btn" data-src="book" onclick="setSrcType('book',this)">Book</button>
         <button class="src-btn" data-src="other" onclick="setSrcType('other',this)">Other</button>
       </div>
-      <input type="text" id="f-source" placeholder="https://...">
+      <input type="text" id="f-source" placeholder="https://..." style="font-size: 16px;">
     </div>
     <div class="form-group">
       <label>Photo URL <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
-      <input type="text" id="f-photo-url" placeholder="Paste Google Drive photo link..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem;">
+      <input type="text" id="f-photo-url" placeholder="Paste Google Drive photo link..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 16px;">
     </div>
     <div class="validation" id="validation"></div>
     <button class="submit-btn" id="submit-btn" onclick="saveRecipe()">Save recipe</button>
@@ -658,9 +658,10 @@ function switchToPaste() {
 function handleImportPaste() {
   const json = document.getElementById('import-paste').value.trim();
   if (!json) { showToast('Paste JSON before importing.', false); return; }
-  processImport(json);
   document.getElementById('import-paste').value = '';
   document.getElementById('import-paste').style.display = 'none';
+  processImport(json);
+  setTimeout(resetZoom, 100);
 }
 
 function processImport(jsonString) {
@@ -856,6 +857,7 @@ function getFiltered() {
 }
 
 function render() {
+  resetZoom();
   const grid = document.getElementById('recipe-grid'), empty = document.getElementById('empty-state');
   const filtered = getFiltered();
   const total = recipes.length;
@@ -1088,6 +1090,7 @@ async function saveRecipe() {
     if (editingId) { const idx = recipes.findIndex(r => r.id === editingId); if (idx > -1) recipes[idx] = recipe; }
     else recipes.unshift(recipe);
     clearStatus(); closeAdd(); render();
+    setTimeout(resetZoom, 200);
     showToast(editingId ? 'Recipe updated!' : 'Recipe saved!', false);
   } catch (e) {
     clearStatus(); setStatus('Could not save. Check your connection.', true);
@@ -1183,6 +1186,8 @@ document.addEventListener('click', e => {
 
 function resetZoom() {
   document.body.style.zoom = '100%';
+  document.documentElement.style.zoom = '100%';
+  window.scrollTo(0, window.scrollY);
 }
 
 function checkPassword() {
