@@ -524,6 +524,20 @@ async function apiCall(params) {
   return r.json();
 }
 
+// Writes go through one queue so Apps Script never gets overlapping saves
+let _writeQueue = Promise.resolve();
+function queuedApiCall(params) {
+  const p = _writeQueue.then(() => apiCall(params));
+  _writeQueue = p.catch(() => {});
+  return p;
+}
+
+// Google Drive photos: ask for a resized version instead of the full original
+function imgSize(url, w) {
+  if (url && url.includes('lh3.googleusercontent.com/d/') && !url.includes('=')) return `${url}=w${w}`;
+  return url;
+}
+
 // ─── Session state persistence (search/filters/open recipe, 1h TTL) ───────────
 const SESSION_KEY = 'recipes-session-state';
 const SESSION_TTL = 60 * 60 * 1000; // 1 hour
@@ -877,7 +891,7 @@ function render() {
         ${r.occasion ? `<span class="tag tag-occasion">&#127881; ${r.occasion}</span>` : ''}
       </div>
       <div class="card-name">${r.name}</div>
-      ${r.photourl ? `<img src="${r.photourl}" alt="${r.name}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin:0.5rem 0;">` : ''}
+      ${r.photourl ? `<img src="${imgSize(r.photourl, 400)}" loading="lazy" decoding="async" alt="${r.name}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin:0.5rem 0;">` : ''}
       <div class="card-actions">
         <button class="card-btn" onclick="event.stopPropagation();openEdit('${r.id}')">Edit</button>
         <button class="card-btn" onclick="event.stopPropagation();confirmDelete('${r.id}')">Delete</button>
@@ -929,7 +943,7 @@ function populateView(id) {
   if (r.sourcetype === 'url' && r.source) vs.innerHTML = `<a href="${r.source}" target="_blank" rel="noopener">${r.source}</a>`;
   else vs.textContent = r.source || '';
   if (r.photourl) {
-    document.getElementById('v-photo').src = r.photourl;
+    document.getElementById('v-photo').src = imgSize(r.photourl, 1000);
     document.getElementById('v-photo-section').style.display = 'block';
   } else {
     document.getElementById('v-photo-section').style.display = 'none';
@@ -1065,12 +1079,12 @@ async function saveRecipe() {
   if (!category) { document.getElementById('f-category').classList.add('err'); errors.push('category'); } else document.getElementById('f-category').classList.remove('err');
   if (errors.length) { showValidation(`Please fill in: ${errors.join(', ')}.`); return; }
 
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
+  const wasEditing = editingId;            // capture now: editingId changes if the modal is closed mid-save
+  const prev = wasEditing ? recipes.find(r => r.id === wasEditing) : null;
   const occasion = document.getElementById('f-occasion').value.trim();
   const rawPhotoUrl = document.getElementById('f-photo-url').value.trim();
   const recipe = {
-    id: editingId || Date.now().toString(),
+    id: wasEditing || Date.now().toString(),
     name,
     ingredients: document.getElementById('f-ingredients').value.trim(),
     instructions: document.getElementById('f-instructions').value.trim(),
@@ -1078,37 +1092,45 @@ async function saveRecipe() {
     occasion: occasion || '',
     sourcetype: srcType,
     source: document.getElementById('f-source').value.trim(),
-    made: editingId ? (recipes.find(r => r.id === editingId)?.made || false) : false,
-    staples: editingId ? (recipes.find(r => r.id === editingId)?.staples || false) : false,
-    createdat: editingId ? (recipes.find(r => r.id === editingId)?.createdat || new Date().toISOString()) : new Date().toISOString(),
+    made: prev ? (prev.made || false) : false,
+    staples: prev ? (prev.staples || false) : false,
+    createdat: prev ? (prev.createdat || new Date().toISOString()) : new Date().toISOString(),
     photourl: rawPhotoUrl ? (toDirectUrl(rawPhotoUrl) || '') : ''
   };
 
+  // Update the screen immediately, sync to the sheet in the background
+  if (wasEditing) { const idx = recipes.findIndex(r => r.id === wasEditing); if (idx > -1) recipes[idx] = recipe; }
+  else recipes.unshift(recipe);
+  closeAdd(); render();
+  setTimeout(resetZoom, 200);
+  setStatus('Syncing...', false);
+
   try {
-    setStatus(editingId ? 'Updating recipe...' : 'Saving recipe...', false);
-    await apiCall({ action: editingId ? 'updateRecipe' : 'saveRecipe', data: recipe });
-    if (editingId) { const idx = recipes.findIndex(r => r.id === editingId); if (idx > -1) recipes[idx] = recipe; }
-    else recipes.unshift(recipe);
-    clearStatus(); closeAdd(); render();
-    setTimeout(resetZoom, 200);
-    showToast(editingId ? 'Recipe updated!' : 'Recipe saved!', false);
+    await queuedApiCall({ action: wasEditing ? 'updateRecipe' : 'saveRecipe', data: recipe });
+    showToast(wasEditing ? 'Recipe updated!' : 'Recipe saved!', false);
   } catch (e) {
-    clearStatus(); setStatus('Could not save. Check your connection.', true);
+    // roll back so the screen matches the sheet
+    const idx = recipes.findIndex(r => r.id === recipe.id);
+    if (wasEditing && prev && idx > -1) recipes[idx] = prev;
+    else if (idx > -1) recipes.splice(idx, 1);
+    render();
+    setStatus('Could not save "' + name + '". Check your connection.', true);
+    return;
   }
-  btn.disabled = false;
+  clearStatus();
 }
 
 async function toggleMade(id) {
   const idx = recipes.findIndex(r => r.id === id); if (idx < 0) return;
   recipes[idx].made = !recipes[idx].made; render();
-  try { await apiCall({ action: 'toggleMade', id, value: recipes[idx].made }); }
+  try { await queuedApiCall({ action: 'toggleMade', id, value: recipes[idx].made }); }
   catch (e) { recipes[idx].made = !recipes[idx].made; render(); }
 }
 
 async function toggleStaples(id) {
   const idx = recipes.findIndex(r => r.id === id); if (idx < 0) return;
   recipes[idx].staples = !recipes[idx].staples; render();
-  try { await apiCall({ action: 'toggleStaples', id, value: recipes[idx].staples }); }
+  try { await queuedApiCall({ action: 'toggleStaples', id, value: recipes[idx].staples }); }
   catch (e) { recipes[idx].staples = !recipes[idx].staples; render(); }
 }
 
@@ -1123,7 +1145,7 @@ function confirmDelete(id) {
 async function commitDelete() {
   if (!deletedRecipe) return;
   const { recipe } = deletedRecipe; deletedRecipe = null; deleteTimeout = null;
-  try { await apiCall({ action: 'deleteRecipe', id: recipe.id }); }
+  try { await queuedApiCall({ action: 'deleteRecipe', id: recipe.id }); }
   catch (e) { setStatus('Could not delete from Sheets. Refresh and try again.', true); }
 }
 function undoDelete() {
@@ -1190,11 +1212,11 @@ function resetZoom() {
   window.scrollTo(0, window.scrollY);
 }
 
-function checkPassword() {
+async function checkPassword() {
   const input = document.getElementById('password-input').value;
-  const correct = '2020';
-  
-  if (input === correct) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('recipes-salt-' + input));
+  const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  if (hash === '6060de19de383e134a8b317d4720a6cbaa0b7de9e0bfef3836baed9bff5b28a6') {
     sessionStorage.setItem('recipe-authenticated', 'true');
     document.getElementById('password-modal').classList.add('hidden');
     loadRecipes();
